@@ -1,1 +1,72 @@
-[]
+[
+  {
+    "id": "pl-001",
+    "name": "Erling Haaland",
+    "club": "Man City",
+    "nation": "🇳🇴",
+    "league": "Premier League",
+    "position": "ST",
+    "pace": 89,
+    "shooting": 92,
+    "passing": 71,
+    "dribbling": 82,
+    "defense": 50,
+    "baseOverall": 91
+  },
+  {
+    "id": "pl-002",
+    "name": "Bukayo Saka",
+    "club": "Arsenal",
+    "nation": "🏴",
+    "league": "Premier League",
+    "position": "RW",
+    "pace": 87,
+    "shooting": 84,
+    "passing": 83,
+    "dribbling": 88,
+    "defense": 61,
+    "baseOverall": 86
+  },
+  {
+    "id": "pl-003",
+    "name": "Virgil van Dijk",
+    "club": "Liverpool",
+    "nation": "🇳🇱",
+    "league": "Premier League",
+    "position": "CB",
+    "pace": 75,
+    "shooting": 62,
+    "passing": 78,
+    "dribbling": 71,
+    "defense": 91,
+    "baseOverall": 88
+  },
+  {
+    "id": "int-001",
+    "name": "Kylian Mbappe",
+    "club": "Real Madrid",
+    "nation": "🇫🇷",
+    "league": "La Liga",
+    "position": "LW",
+    "pace": 97,
+    "shooting": 90,
+    "passing": 80,
+    "dribbling": 92,
+    "defense": 38,
+    "baseOverall": 92
+  },
+  {
+    "id": "int-002",
+    "name": "Kevin De Bruyne",
+    "club": "Man City",
+    "nation": "🇧🇪",
+    "league": "Premier League",
+    "position": "CM",
+    "pace": 74,
+    "shooting": 86,
+    "passing": 94,
+    "dribbling": 88,
+    "defense": 64,
+    "baseOverall": 91
+  }
+]

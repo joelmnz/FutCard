@@ -1,0 +1,15 @@
+:root {
+  --bg-primary: #080c14;
+  --bg-secondary: #0f1520;
+  --bg-panel: #161d2e;
+  --accent-green: #00ff87;
+  --accent-gold: #ffd700;
+  --accent-blue: #4fc3f7;
+  --accent-purple: #ce93d8;
+  --accent-orange: #ff7043;
+  --text-primary: #f0f4ff;
+  --text-muted: #5a6a8a;
+  --success: #00e676;
+  --danger: #ff5252;
+  --warning: #ffab40;
+}

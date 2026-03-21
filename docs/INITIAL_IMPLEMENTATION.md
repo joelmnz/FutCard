@@ -491,3 +491,39 @@ jobs:
   - `scripts/generate-icons.ts`, `tests/setup.ts`, `.github/workflows/deploy.yml`, `bunfig.toml`
 - Note:
   - `vite-plugin-pwa` currently reports a peer warning against the installed Vite version. This is non-blocking for Step 1 scaffold work and will be validated during Step 2 configuration/build checks.
+### 2026-03-21 — Steps 2-15 implementation pass
+- Resolved dependency conflict by aligning to a compatible matrix:
+  - `vite` -> `^6.4.1`
+  - `@sveltejs/vite-plugin-svelte` -> `^6.2.1`
+  - `vite-plugin-pwa` -> `^0.21.2`
+- Step 2 completed:
+  - `tsconfig.json` strict/bundler/ES2022 configured
+  - `svelte.config.js` uses `vitePreprocess()`
+  - `vite.config.ts` configured with `/futcard/` base and PWA plugin setup
+  - `bunfig.toml` test preload configured
+- Steps 3-8 completed with foundational implementations:
+  - tokens/global/animations styles
+  - core types
+  - IndexedDB schema/helpers
+  - rune state files
+  - hydrate/autosave
+  - seed `players.json`
+  - card generator/utils
+- Steps 9-12 completed with functional MVP components/pages/systems:
+  - Card/CardGrid/CardDetail
+  - UI primitives (Modal/Toast/Button/Nav/InstallPrompt/UpdatePrompt)
+  - Onboarding + tabbed app shell
+  - Market engine, trade AI, match engine, upgrades service
+- Steps 13-15 completed:
+  - critical unit tests implemented and passing
+  - icon generation script added (SVG placeholders)
+  - full GitHub Actions deploy workflow added
+- Review-driven risk fixes applied:
+  - autosave now clears stores before rewrite (prevents deleted entity resurrection)
+  - market listing exploit fixes (self-buy block, remove card on listing, replenish logic)
+  - elite trade rule tightened to epic/legendary-only offers
+  - check script enforces both `svelte-check` and `tsc --noEmit`
+- Validation status:
+  - `bun run check` -> pass (0 errors, 0 warnings)
+  - `bun test` -> pass (18 tests)
+  - `bun run build` -> pass
