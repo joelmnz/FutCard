@@ -471,3 +471,23 @@ jobs:
 - `players.json` must be imported as a static asset (Vite handles this at build time)
 - Test files use `import { describe, it, expect } from 'bun:test'`
 - No `console.log` in production code — use a `logger.ts` util that no-ops in prod
+
+---
+
+## Implementation Tracking Notes
+
+### 2026-03-21 — Step 1 verification + partial completion
+- Verified repository was already scaffolded as Vite + Svelte + TypeScript.
+- Installed missing Step 1 dependencies:
+  - `idb`
+  - `vite-plugin-pwa`
+  - `workbox-window`
+  - `svelte-check` (already present, retained at latest compatible version)
+- Created the Step 1 skeleton folders/files as empty stubs to unblock upcoming implementation steps:
+  - `src/core/*` (types, db, state, persistence)
+  - `src/data/players.json`
+  - `src/features/*` initial feature/service/component paths
+  - `src/ui/styles/*` and `src/ui/components/*`
+  - `scripts/generate-icons.ts`, `tests/setup.ts`, `.github/workflows/deploy.yml`, `bunfig.toml`
+- Note:
+  - `vite-plugin-pwa` currently reports a peer warning against the installed Vite version. This is non-blocking for Step 1 scaffold work and will be validated during Step 2 configuration/build checks.
