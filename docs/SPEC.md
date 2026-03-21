@@ -64,7 +64,7 @@ Installable on desktop via PWA. Built with Svelte 5, Vite, Bun, TypeScript stric
 ## Data
 
 ### Player Dataset
-- ~500 real Premier League / international players
+- Phased rollout: start with an initial curated/generated seed dataset, then expand toward ~500 Premier League / international players
 - Stored as `src/data/players.json`
 - Fields: `id, name, club, nation, league, position, pace, shooting, passing, dribbling, defense, baseOverall`
 - Stats reflect real-world relative quality (not exact FIFA numbers)
@@ -90,7 +90,8 @@ Installable on desktop via PWA. Built with Svelte 5, Vite, Bun, TypeScript stric
 | `market` | `listingId` | rarity, listPrice, position | All market listings |
 | `bots` | `botId` | — | Bot state + card collections |
 | `matches` | `matchId` | date, result | Match history |
-| `priceHistory` | `[playerBaseId, timestamp]` | — | Price points (max 30 per card) |
+
+Price history is persisted only within each card record as `card.priceHistory` (max 30 points), not as a standalone store.
 
 ---
 
@@ -199,7 +200,7 @@ Per match tick (90 ticks = 90 simulated minutes):
 | Stat Boost | 500 XP | +1 to chosen stat (capped at 99) |
 | Rarity Promote | 5,000 XP | Common→Rare→Epic→Legendary (visual + price boost) |
 
-- Rarity promotion resets upgradeCount to 0, keeps stats
+- Rarity promotion keeps `upgradeCount` tracking intact (no reset), keeps stats
 - Max 10 upgrades total per card lifetime (across both types)
 - Upgrade UI: modal from CardDetail, shows XP bar, available upgrades
 
@@ -251,6 +252,8 @@ Steps:
   4. bun run build   (vite build → dist/)
   5. Deploy dist/ → GitHub Pages
 ```
+
+Deployment target is the GitHub Pages site for `joelmnz/futcard`, with Vite base set to `/futcard/`.
 
 ---
 

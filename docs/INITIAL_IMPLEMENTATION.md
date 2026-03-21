@@ -2,7 +2,7 @@
 
 ## Prerequisites
 - Bun installed (`curl -fsSL https://bun.sh/install | bash`)
-- Node 20+ (for Vite compatibility)
+- Bun-first workflow for install/check/test/build (no separate Node-first flow)
 - Git repo initialised and pushed to GitHub
 - GitHub Pages enabled on repo (Settings → Pages → GitHub Actions source)
 
@@ -35,7 +35,7 @@ Create exact folder structure from SPEC.md. Create all files as empty stubs firs
 - No adapter needed (static output)
 
 ### `vite.config.ts`
-- Base: `'./'` for GitHub Pages compatibility (or `'/futcard/'` if repo is not user root)
+- Base: `'/futcard/'` for GitHub Pages deploy from `joelmnz/futcard`
 - `@sveltejs/vite-plugin-svelte`
 - `vite-plugin-pwa` with full manifest and Workbox config per SPEC
 - Pre-cache: all JS/CSS/HTML/SVG/JSON assets
@@ -72,7 +72,7 @@ Position         — 'GK' | 'CB' | 'LB' | 'RB' | 'CDM' | 'CM' | 'CAM' | 'LW' | '
 
 **`game.types.ts`**
 ```
-GameState        — managerName, coins, onboardingDone, lastSaved
+GameState        — managerName, coins, xpPool, onboardingDone, lastSaved
 ```
 
 **`market.types.ts`**
@@ -101,6 +101,7 @@ MatchResult      — homeScore, awayScore, events[], rewards, motm
 `src/core/db/db.ts`
 - Open `futcard-db` version 1
 - Create all object stores with indexes per SPEC schema
+- Do not create a standalone `priceHistory` store (history remains in each card record)
 - Export typed `getDB()` async function
 
 `src/core/db/db.helpers.ts`
@@ -122,7 +123,7 @@ export function removeCard(id: string) { ... }
 ```
 
 State files:
-- `game.state.svelte.ts` — coins, managerName, onboardingDone
+- `game.state.svelte.ts` — coins, xpPool, managerName, onboardingDone
 - `collection.state.svelte.ts` — cards[]
 - `market.state.svelte.ts` — listings[]
 - `trade.state.svelte.ts` — bots[], yourOffer, botOffer, selectedBotId
@@ -148,7 +149,7 @@ State files:
 ## Step 8 — Player Dataset
 
 `src/data/players.json`
-- Array of ~500 `PlayerTemplate` objects
+- Start with a phased dataset (initial curated/generated seed set), then expand toward full target coverage
 - Clubs: all 20 Premier League clubs (2023/24 season squads)
 - Include ~20 international stars from top European clubs
 - Stats: relative quality, not exact FIFA values
@@ -157,6 +158,7 @@ State files:
   - Squad players: 60–71
 - Ensure position distribution covers all positions
 - Include: name, club, nation (emoji flag), league, position, pace, shooting, passing, dribbling, defense
+- Initial entries can be hand-curated/generated; expand in later passes
 
 `src/features/cards/card.generator.ts`
 - `generateCard(template, rarity)` → Card
@@ -316,7 +318,7 @@ Build each page in this order (each depends on previous):
 ### Match Engine
 `src/features/match/match.engine.ts`
 - `simulateMatch(yourTeam, opponentBot)` → `Promise<MatchResult>`
-- Returns events array + result synchronously
+- Promise-based async API contract (resolve with events + result)
 - Caller animates events over 10s (one event per ~300ms)
 - Chemistry calculated before simulation
 - Rewards calculated from result + opponent avg overall
@@ -340,7 +342,7 @@ Build each page in this order (each depends on previous):
 
 Location: alongside service files as `*.test.ts`
 
-### Required test coverage:
+### Initial critical test coverage (phase 1):
 ```
 card.generator.test.ts
   ✓ generateCard returns correct rarity
@@ -371,10 +373,22 @@ trade.ai.test.ts
 upgrade.service.test.ts
   ✓ stat boost increments chosen stat by 1
   ✓ stat boost cannot exceed 99
-  ✓ rarity promotes in correct order
-  ✓ upgradeCount increments on each upgrade
   ✓ cannot upgrade beyond 10 total
+
+match.engine.test.ts
+  ✓ simulateMatch returns Promise<MatchResult>
+  ✓ simulateMatch returns valid non-negative score
+
+pack.service.test.ts
+  ✓ pack deducts correct coin amount
+  ✓ returns correct card count per pack type
+
+market.engine.test.ts
+  ✓ price fluctuation stays within ±8%
+  ✓ priceHistory never exceeds 30 entries
 ```
+
+Add broader coverage from this guide in later phases once core systems stabilise.
 
 ---
 
