@@ -29,29 +29,8 @@
 <style>
   .grid {
     display: grid;
-    gap: 0.9rem;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  /* Tablet: 3 columns */
-  @media (min-width: 640px) {
-    .grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  /* Desktop: 4 columns */
-  @media (min-width: 1024px) {
-    .grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  /* Wide Desktop: 5 columns */
-  @media (min-width: 1536px) {
-    .grid {
-      grid-template-columns: repeat(5, 1fr);
-    }
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 
   .card-entry {

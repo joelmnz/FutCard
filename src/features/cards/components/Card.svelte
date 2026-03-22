@@ -73,6 +73,7 @@
 <style>
   /* ---- Wrapper ---- */
   .card-wrap {
+    container-type: inline-size;
     position: relative;
     aspect-ratio: 200 / 280;
     border-radius: 16px;
@@ -129,7 +130,7 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 7px 7px 5px;
+    padding: clamp(6px, 5cqi, 12px) clamp(6px, 5cqi, 12px) clamp(5px, 4cqi, 10px);
     gap: 0;
   }
 
@@ -285,21 +286,9 @@
   }
 
   /* ---- Size variants ---- */
-  .full  { width: 100%;    font-size: 14px; }
+  .full  { width: 100%; max-width: none; font-size: clamp(14px, 7cqi, 18px); margin: 0; }
   
-  .mini  { max-width: 140px; font-size: 11px; }
-  @media (min-width: 640px) {
-    .mini { max-width: 160px; }
-  }
-  @media (min-width: 1024px) {
-    .mini { max-width: 170px; }
-  }
+  .mini  { width: 100%; max-width: 280px; font-size: clamp(12px, 7cqi, 16px); margin: 0 auto; }
   
-  .micro { max-width: 100px; font-size: 9px; }
-  @media (min-width: 640px) {
-    .micro { max-width: 110px; }
-  }
-  @media (min-width: 1024px) {
-    .micro { max-width: 120px; }
-  }
+  .micro { width: 100%; max-width: 140px; font-size: clamp(9px, 7cqi, 12px); margin: 0 auto; }
 </style>

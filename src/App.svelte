@@ -813,26 +813,8 @@
   /* ---- Stat Boxes ---- */
   .stat-boxes {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.7rem;
-  }
-
-  @media (min-width: 640px) {
-    .stat-boxes {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .stat-boxes {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  @media (min-width: 1536px) {
-    .stat-boxes {
-      grid-template-columns: repeat(5, 1fr);
-    }
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 1rem;
   }
 
   .stat-box {
@@ -896,16 +878,17 @@
     padding: 0;
   }
 
-  /* ---- Card row (horizontal scroll) ---- */
+  /* ---- Card row (responsive grid instead of horizontal scroll) ---- */
   .card-row {
-    display: flex;
-    gap: 0.9rem;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1rem;
     padding-bottom: 6px;
-    scrollbar-width: none;
   }
-  .card-row::-webkit-scrollbar { display: none; }
-  .card-row > :global(.card-wrap) { flex-shrink: 0; width: 160px; }
+  .card-row > :global(.card-wrap) {
+    width: 100%;
+    margin: 0;
+  }
 
   /* ---- Market card wrap with buy overlay ---- */
   .market-card-wrap {
@@ -940,26 +923,8 @@
   /* ---- Market grid ---- */
   .market-grid {
     display: grid;
-    gap: 0.9rem;
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  @media (min-width: 640px) {
-    .market-grid {
-      grid-template-columns: repeat(3, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .market-grid {
-      grid-template-columns: repeat(4, 1fr);
-    }
-  }
-
-  @media (min-width: 1536px) {
-    .market-grid {
-      grid-template-columns: repeat(5, 1fr);
-    }
+    gap: 1.2rem;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
 
   /* ---- Quick actions ---- */
@@ -1328,20 +1293,8 @@
 
   .lineup-grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 0.6rem;
-  }
-
-  @media (min-width: 640px) {
-    .lineup-grid {
-      grid-template-columns: repeat(7, 1fr);
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .lineup-grid {
-      grid-template-columns: repeat(11, 1fr);
-    }
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.8rem;
   }
 
   .match-kick {
