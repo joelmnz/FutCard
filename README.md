@@ -1,47 +1,94 @@
-# Svelte + TS + Vite
+# FutCard
 
-This template should help get you started developing with Svelte and TypeScript in Vite.
+FutCard is a client-side football card trading game built with Svelte 5, TypeScript, Vite, and Bun.
 
-## Recommended IDE Setup
+The game runs entirely in the browser (with IndexedDB persistence) and is designed around a simple loop:
+onboard your manager, open packs, manage your collection, trade and sell cards, play matches, and grow your club value.
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+## Features
 
-## Need an official Svelte framework?
+- Onboarding flow for first-time setup
+- Card collection with rarity tiers and detailed stats
+- Pack opening system (Bronze, Silver, Gold, Elite) with weighted rarity odds
+- Live transfer market with auto-replenished listings and price movement
+- AI trade bots with distinct negotiation styles
+- Match simulation with chemistry-influenced outcomes and coin rewards
+- XP/upgrade systems for progressing cards over time
+- Offline-first persistence via IndexedDB + debounced autosave
+- PWA support for installability and update handling
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+## Tech Stack
 
-## Technical considerations
+- Svelte 5 (Runes)
+- TypeScript (strict mode)
+- Vite 6
+- Bun (package manager, scripts, test runner)
+- IndexedDB via `idb`
+- `vite-plugin-pwa` + Workbox
 
-**Why use this over SvelteKit?**
+## Getting Started
 
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
+### Prerequisites
 
-This template contains as little as possible to get started with Vite + TypeScript + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
+- Bun installed locally
 
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
+### Install
 
-**Why `global.d.ts` instead of `compilerOptions.types` inside `jsconfig.json` or `tsconfig.json`?**
-
-Setting `compilerOptions.types` shuts out all other types not explicitly listed in the configuration. Using triple-slash references keeps the default TypeScript setting of accepting type information from the entire workspace, while also adding `svelte` and `vite/client` type information.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `allowJs` in the TS template?**
-
-While `allowJs: false` would indeed prevent the use of `.js` files in the project, it does not prevent the use of JavaScript syntax in `.svelte` files. In addition, it would force `checkJs: false`, bringing the worst of both worlds: not being able to guarantee the entire codebase is TypeScript, and also having worse typechecking for the existing JavaScript. In addition, there are valid use cases in which a mixed codebase may be relevant.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/rixo/svelte-hmr#svelte-hmr).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```ts
-// store.ts
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
+```bash
+bun install
 ```
+
+### Run the app
+
+```bash
+bun run dev
+```
+
+The dev server is configured with `strictPort: true` and runs on port `5177`.
+
+## Scripts
+
+- `bun run dev` - start development server
+- `bun run check` - run TypeScript + Svelte checks
+- `bun run typecheck` - run TypeScript project references check
+- `bun test` - run unit tests
+- `bun run build` - build production bundle
+- `bun run preview` - preview production build locally
+- `bun run icons` - regenerate app icons
+
+## App Architecture
+
+Top-level areas:
+
+- `src/core/` - platform layer (db, persistence, shared state, domain types)
+- `src/features/` - gameplay/domain modules (onboarding, dashboard, collection, portfolio, packs, market, trade, match, cards, upgrades)
+- `src/ui/` - reusable UI components and style tokens
+- `tests/` - test setup and shared test utilities
+- `docs/` - product specification and implementation notes
+
+Startup flow:
+
+1. `src/main.ts` hydrates persisted state from IndexedDB
+2. `src/main.ts` mounts the app
+3. `src/App.svelte` initializes autosave listeners
+
+## Persistence Notes
+
+- Data is stored in IndexedDB (`futcard-db`) across game, collection, market, and bots.
+- Autosave is debounced (500ms) to reduce write frequency during active gameplay.
+
+## Deployment Notes
+
+- Vite base path is set to `/futcard/`.
+- PWA start URL and scope are also configured for `/futcard/`.
+- If you host under a different path, update `vite.config.ts` accordingly.
+
+## Testing
+
+Service and engine tests run with Bun. Test preload configuration in `bunfig.toml` uses `tests/setup.ts` to provide minimal runes-compatible shims for non-component logic.
+
+## Reference Docs
+
+- Product spec: `docs/SPEC.md`
+- Implementation notes: `docs/INITIAL_IMPLEMENTATION.md`
+- Visual prototype: `docs/futcard-singlepage-poc.html`
