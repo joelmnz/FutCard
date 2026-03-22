@@ -3,6 +3,7 @@
   import type { MarketListing } from '../../../core/types/market.types'
   import CardComponent from '../../cards/components/Card.svelte'
   import { formatCoins } from '../../cards/card.utils'
+  import PageHeader from '../../../ui/components/PageHeader.svelte'
   import StatBoxGrid from '../../../ui/components/StatBoxGrid.svelte'
   import StatBox from '../../../ui/components/StatBox.svelte'
 
@@ -64,9 +65,7 @@
   </StatBoxGrid>
 
   {#if topCards.length}
-    <div class="section-header">
-      <span class="section-title">⭐ Your Best Cards</span>
-    </div>
+    <PageHeader variant="section" title="⭐ Your Best Cards" />
     <div class="card-row">
       {#each topCards as card (card.cardId)}
         <CardComponent {card} onclick={() => onOpenCard(card)} />
@@ -75,10 +74,9 @@
   {/if}
 
   {#if hotListings.length}
-    <div class="section-header">
-      <span class="section-title">🔥 Hot Market</span>
+    <PageHeader variant="section" title="🔥 Hot Market">
       <button class="section-link" onclick={onOpenMarket}>View All →</button>
-    </div>
+    </PageHeader>
     <div class="card-row">
       {#each hotListings as listing (listing.listingId)}
         <div class="market-card-wrap">
@@ -151,18 +149,6 @@
     font-size: 1.4rem;
     font-weight: 900;
     color: var(--accent-gold);
-  }
-
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .section-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-primary);
   }
 
   .section-link {

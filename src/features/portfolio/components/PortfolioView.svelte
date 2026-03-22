@@ -40,9 +40,7 @@
   </StatBoxGrid>
 
   {#if topCards.length}
-    <div class="section-header">
-      <span class="section-title">🏆 Best Cards</span>
-    </div>
+    <PageHeader variant="section" title="🏆 Best Cards" />
     <CardGrid cards={topCards} onCardClick={onOpenCard} />
   {/if}
 </div>
@@ -74,15 +72,4 @@
     color: var(--accent-gold);
   }
 
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .section-title {
-    font-size: 1rem;
-    font-weight: 800;
-    color: var(--text-primary);
-  }
 </style>

@@ -4,15 +4,20 @@
   interface Props {
     title: string
     subtitle?: string
+    variant?: 'page' | 'section'
     children?: Snippet
   }
 
-  let { title, subtitle, children }: Props = $props()
+  let { title, subtitle, variant = 'page', children }: Props = $props()
 </script>
 
-<div class="page-header">
+<div class={`page-header ${variant}`}>
   <div class="page-header-copy">
-    <h2>{title}</h2>
+    {#if variant === 'section'}
+      <h3>{title}</h3>
+    {:else}
+      <h2>{title}</h2>
+    {/if}
     {#if subtitle}
       <p class="page-intro">{subtitle}</p>
     {/if}
@@ -39,11 +44,20 @@
     gap: 0.2rem;
   }
 
-  h2 {
+  h2,
+  h3 {
     margin: 0;
-    font-size: 1.5rem;
     font-weight: 900;
     color: var(--text-primary);
+  }
+
+  .page-header.page h2 {
+    font-size: 1.5rem;
+  }
+
+  .page-header.section h3 {
+    font-size: 1rem;
+    font-weight: 800;
   }
 
   .page-intro {
