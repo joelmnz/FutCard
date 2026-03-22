@@ -3,7 +3,7 @@
   import { formatCoins } from '../card.utils'
   import CardComponent from './Card.svelte'
 
-  let { card }: { card: Card } = $props()
+  let { card, onSellCard }: { card: Card; onSellCard?: (card: Card) => void } = $props()
 
   const stats = $derived([
     { label: 'PAC', value: card.pace,      color: '#4fc3f7' },
@@ -55,8 +55,15 @@
     </div>
 
     <div class="value-display">
-      <span class="value-label">Market Value</span>
-      <span class="value-amount">🪙 {formatCoins(card.currentPrice)}</span>
+      <div class="value-copy">
+        <span class="value-label">Market Value</span>
+        <span class="value-amount">🪙 {formatCoins(card.currentPrice)}</span>
+      </div>
+      {#if onSellCard}
+        <button class="sell-button" type="button" onclick={() => onSellCard(card)}>
+          Sell
+        </button>
+      {/if}
     </div>
   </div>
 </div>
@@ -159,10 +166,16 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 1rem;
     background: rgba(255, 215, 0, 0.07);
     border: 1px solid rgba(255, 215, 0, 0.2);
     border-radius: 10px;
     padding: 0.6rem 1rem;
+  }
+
+  .value-copy {
+    display: grid;
+    gap: 0.15rem;
   }
 
   .value-label {
@@ -175,5 +188,33 @@
     font-size: 1.1rem;
     font-weight: 900;
     color: var(--accent-gold);
+  }
+
+  .sell-button {
+    appearance: none;
+    border: 1px solid rgba(255, 215, 0, 0.35);
+    background: rgba(255, 215, 0, 0.12);
+    color: var(--text-primary);
+    border-radius: 999px;
+    padding: 0.55rem 0.9rem;
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition:
+      transform 180ms var(--ease-out-quart, ease),
+      background 180ms var(--ease-out-quart, ease),
+      border-color 180ms var(--ease-out-quart, ease);
+  }
+
+  .sell-button:hover {
+    transform: translateY(-1px);
+    background: rgba(255, 215, 0, 0.18);
+    border-color: rgba(255, 215, 0, 0.5);
+  }
+
+  .sell-button:focus-visible {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 2px;
   }
 </style>

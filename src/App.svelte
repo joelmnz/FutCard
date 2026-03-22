@@ -214,6 +214,32 @@
     toast('success', `⚽ ${listing.card.name} added to your squad!`)
   }
 
+  function listCard(card: Card) {
+    const ownedCard = collectionState.cards.find((owned) => owned.cardId === card.cardId)
+
+    if (!ownedCard) {
+      toast('error', 'This card is no longer in your collection')
+      return false
+    }
+
+    if (marketState.listings.some((listing) => listing.card.cardId === card.cardId)) {
+      toast('error', 'This card is already listed')
+      return false
+    }
+
+    removeCard(card.cardId)
+    upsertListing({
+      listingId: crypto.randomUUID(),
+      card: ownedCard,
+      listPrice: ownedCard.currentPrice,
+      listedAt: Date.now(),
+      isPlayerListed: true,
+    })
+    toast('success', `📈 ${ownedCard.name} listed for ${formatCoins(ownedCard.currentPrice)}`)
+    showCardModal = false
+    return true
+  }
+
   function listRandomCard() {
     const card = collectionState.cards[0]
     if (!card) {
@@ -221,17 +247,7 @@
       return
     }
 
-    removeCard(card.cardId)
-    const listing: MarketListing = {
-      listingId: crypto.randomUUID(),
-      card,
-      listPrice: card.currentPrice,
-      listedAt: Date.now(),
-      isPlayerListed: true,
-    }
-
-    upsertListing(listing)
-    toast('info', `${card.name} listed on market`)
+    listCard(card)
   }
 
   async function playQuickMatch() {
@@ -447,7 +463,7 @@
 
 <Modal open={showCardModal} onClose={() => (showCardModal = false)}>
   {#if selectedCard}
-    <CardDetail card={selectedCard} />
+    <CardDetail card={selectedCard} onSellCard={listCard} />
   {/if}
 </Modal>
 
