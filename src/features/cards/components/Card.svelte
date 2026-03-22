@@ -286,6 +286,20 @@
 
   /* ---- Size variants ---- */
   .full  { width: 100%;    font-size: 14px; }
-  .mini  { max-width: 150px; font-size: 11px; }
-  .micro { max-width: 110px; font-size: 9px; }
+  
+  .mini  { max-width: 140px; font-size: 11px; }
+  @media (min-width: 640px) {
+    .mini { max-width: 160px; }
+  }
+  @media (min-width: 1024px) {
+    .mini { max-width: 170px; }
+  }
+  
+  .micro { max-width: 100px; font-size: 9px; }
+  @media (min-width: 640px) {
+    .micro { max-width: 110px; }
+  }
+  @media (min-width: 1024px) {
+    .micro { max-width: 120px; }
+  }
 </style>
