@@ -1,0 +1,260 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚽ FutCard - Football Card Trading</title>
+<link rel="stylesheet" href="./site.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">⚽ FutCard</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">🏠 Home</button>
+    <button class="nav-tab" onclick="showPage('collection')">🃏 Collection</button>
+    <button class="nav-tab" onclick="showPage('packs')">📦 Packs</button>
+    <button class="nav-tab" onclick="showPage('market')">🏪 Market</button>
+    <button class="nav-tab" onclick="showPage('trade')">🔄 Trade</button>
+  </div>
+  <div class="coins-display">🪙 <span id="coins-display">1,000,000</span></div>
+</nav>
+
+<!-- TOAST -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- PACK OPENING OVERLAY -->
+<div class="pack-opening-overlay" id="pack-overlay">
+  <div class="pack-opening-title" id="pack-opening-title">✨ Pack Opened!</div>
+  <div class="pack-opening-actions" style="margin-bottom:16px;">
+    <button class="btn btn-primary" onclick="closePack()">Add to Collection</button>
+  </div>
+  <div class="pack-reveal-area" id="pack-reveal-area"></div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="modal-overlay" id="sell-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeSellModal()">✕</button>
+    <div class="modal-title">💰 List Card for Sale</div>
+    <div id="sell-modal-card-info"></div>
+    <label style="font-size:0.85rem;color:var(--muted);">Set your price (coins):</label>
+    <input type="number" class="sell-input" id="sell-price-input" placeholder="Enter price...">
+    <div style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;" id="sell-suggested-price"></div>
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-gold" onclick="confirmSell()">List on Market</button>
+      <button class="btn btn-outline" onclick="closeSellModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARD DETAIL MODAL -->
+<div class="modal-overlay" id="card-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCardModal()">✕</button>
+    <div id="card-modal-content"></div>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div class="page active" id="page-dashboard">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🏆 Dashboard</div>
+      <div class="section-sub">Welcome to FutCard — your ultimate football card trading experience</div>
+    </div>
+  </div>
+
+  <div class="price-ticker" id="price-ticker"></div>
+
+  <div class="collection-stats" id="dashboard-stats"></div>
+
+  <div class="section-header" style="margin-top:32px;">
+    <div class="section-title">⭐ Your Best Cards</div>
+    <button class="btn btn-outline btn-sm" onclick="showPage('collection')">View All →</button>
+  </div>
+  <div class="cards-grid" id="best-cards-grid"></div>
+
+  <div class="section-header" style="margin-top:32px;">
+    <div class="section-title">🔥 Hot Market Listings</div>
+    <button class="btn btn-outline btn-sm" onclick="showPage('market')">Go to Market →</button>
+  </div>
+  <div class="cards-grid" id="hot-listings-grid"></div>
+</div>
+
+<!-- COLLECTION PAGE -->
+<div class="page" id="page-collection">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🃏 My Collection</div>
+      <div class="section-sub" id="collection-count-label">Loading...</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline btn-sm" onclick="sortCollection('overall')">Sort by OVR</button>
+      <button class="btn btn-outline btn-sm" onclick="sortCollection('rarity')">Sort by Rarity</button>
+      <button class="btn btn-outline btn-sm" onclick="sortCollection('price')">Sort by Value</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
+    <button class="rarity-filter-btn active-all" onclick="filterCollection('all',this)">All</button>
+    <button class="rarity-filter-btn" onclick="filterCollection('legendary',this)">🟠 Legendary</button>
+    <button class="rarity-filter-btn" onclick="filterCollection('epic',this)">🟣 Epic</button>
+    <button class="rarity-filter-btn" onclick="filterCollection('rare',this)">🔵 Rare</button>
+    <button class="rarity-filter-btn" onclick="filterCollection('common',this)">⚪ Common</button>
+  </div>
+
+  <div class="cards-grid" id="collection-grid"></div>
+</div>
+
+<!-- PACKS PAGE -->
+<div class="page" id="page-packs">
+  <div class="section-header">
+    <div>
+      <div class="section-title">📦 Pack Store</div>
+      <div class="section-sub">Open packs to discover new players</div>
+    </div>
+  </div>
+  <div class="packs-grid">
+    <div class="pack-card bronze-pack">
+      <span class="pack-icon">📦</span>
+      <div class="pack-name" style="color:var(--bronze);">Bronze Pack</div>
+      <div class="pack-desc">5 cards · Mostly Common<br>Rare chance: 20% · Epic: 5%</div>
+      <div class="pack-price">🪙 5,000</div>
+      <button class="btn btn-primary" onclick="openPack('bronze')">Open Pack</button>
+    </div>
+    <div class="pack-card silver-pack">
+      <span class="pack-icon">🎁</span>
+      <div class="pack-name" style="color:var(--silver);">Silver Pack</div>
+      <div class="pack-desc">7 cards · Common + Rare<br>Rare chance: 50% · Epic: 15%</div>
+      <div class="pack-price">🪙 15,000</div>
+      <button class="btn btn-primary" onclick="openPack('silver')">Open Pack</button>
+    </div>
+    <div class="pack-card gold-pack">
+      <span class="pack-icon">🏆</span>
+      <div class="pack-name" style="color:var(--gold);">Gold Pack</div>
+      <div class="pack-desc">8 cards · Rare guaranteed<br>Epic: 30% · Legendary: 10%</div>
+      <div class="pack-price">🪙 35,000</div>
+      <button class="btn btn-gold" onclick="openPack('gold')">Open Pack</button>
+    </div>
+    <div class="pack-card elite-pack">
+      <span class="pack-icon">💎</span>
+      <div class="pack-name" style="color:var(--legendary);">Elite Pack</div>
+      <div class="pack-desc">10 cards · Epic guaranteed<br>Legendary: 35% · Multiple Epics</div>
+      <div class="pack-price">🪙 100,000</div>
+      <button class="btn btn-danger" onclick="openPack('elite')">Open Pack</button>
+    </div>
+  </div>
+</div>
+
+<!-- MARKET PAGE -->
+<div class="page" id="page-market">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🏪 Transfer Market</div>
+      <div class="section-sub">Buy & sell cards — prices fluctuate in real time</div>
+    </div>
+  </div>
+
+  <div class="market-filters">
+    <input type="text" class="search-input" placeholder="🔍 Search player..." id="market-search" oninput="renderMarket()">
+    <select class="filter-select" id="market-rarity-filter" onchange="renderMarket()">
+      <option value="all">All Rarities</option>
+      <option value="legendary">🟠 Legendary</option>
+      <option value="epic">🟣 Epic</option>
+      <option value="rare">🔵 Rare</option>
+      <option value="common">⚪ Common</option>
+    </select>
+    <select class="filter-select" id="market-sort" onchange="renderMarket()">
+      <option value="price-asc">Price: Low → High</option>
+      <option value="price-desc">Price: High → Low</option>
+      <option value="overall-desc">Overall: High → Low</option>
+    </select>
+    <select class="filter-select" id="market-position-filter" onchange="renderMarket()">
+      <option value="all">All Positions</option>
+      <option value="GK">GK</option>
+      <option value="CB">CB</option>
+      <option value="LB">LB</option>
+      <option value="RB">RB</option>
+      <option value="CDM">CDM</option>
+      <option value="CM">CM</option>
+      <option value="CAM">CAM</option>
+      <option value="LW">LW</option>
+      <option value="RW">RW</option>
+      <option value="ST">ST</option>
+      <option value="CF">CF</option>
+    </select>
+  </div>
+
+  <div class="cards-grid" id="market-grid"></div>
+</div>
+
+<!-- TRADE PAGE -->
+<div class="page" id="page-trade">
+  <div class="section-header">
+    <div>
+      <div class="section-title">🔄 Trade Center</div>
+      <div class="section-sub">Negotiate trades with AI bots</div>
+    </div>
+  </div>
+
+  <div style="margin-bottom:20px;">
+    <div style="font-size:0.9rem;color:var(--muted);margin-bottom:10px;">Select AI Trader:</div>
+    <div class="ai-bot-select" id="bot-select"></div>
+  </div>
+
+  <div class="trade-layout">
+    <div class="trade-panel">
+      <div class="trade-panel-title">📤 Your Offer</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">Click cards from your collection to add</div>
+      <div class="trade-slot" id="your-trade-slot" onclick="openTradeSelector('yours')">
+        <span>+ Add your cards</span>
+      </div>
+      <div style="margin-top:8px;">
+        <label style="font-size:0.8rem;color:var(--muted);">+ Add coins:</label>
+        <input type="number" class="sell-input" id="your-coin-offer" placeholder="0" style="margin-top:6px;" oninput="updateTradeValues()">
+      </div>
+      <div style="margin-top:8px;font-size:0.85rem;color:var(--gold);">Total value: <span id="your-trade-value">🪙 0</span></div>
+    </div>
+
+    <div class="trade-arrow">
+      <div class="trade-arrow-icon">⇄</div>
+      <button class="btn btn-primary btn-sm" onclick="proposeTrade()">Propose Trade</button>
+      <button class="btn btn-outline btn-sm" onclick="clearTrade()">Clear</button>
+    </div>
+
+    <div class="trade-panel">
+      <div class="trade-panel-title" id="bot-trade-title">🤖 Bot's Cards</div>
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:12px;">Click bot cards to request them</div>
+      <div class="trade-slot" id="bot-trade-slot" onclick="openTradeSelector('bot')">
+        <span>+ Select bot's cards</span>
+      </div>
+      <div style="margin-top:8px;font-size:0.85rem;color:var(--gold);">Total value: <span id="bot-trade-value">🪙 0</span></div>
+    </div>
+  </div>
+
+  <div class="trade-value-compare" id="trade-fairness-bar" style="margin-top:20px;display:none;">
+    <div style="font-size:0.85rem;color:var(--muted);margin-bottom:8px;">Trade Fairness</div>
+    <div id="fairness-text" style="font-size:1rem;font-weight:700;"></div>
+  </div>
+
+  <!-- Bot collection preview -->
+  <div style="margin-top:32px;">
+    <div class="section-title" style="margin-bottom:16px;" id="bot-collection-title">🤖 Bot's Collection</div>
+    <div class="cards-grid" id="bot-collection-grid"></div>
+  </div>
+</div>
+
+<!-- TRADE SELECTOR MODAL -->
+<div class="modal-overlay" id="trade-selector-modal">
+  <div class="modal" style="max-width:700px;max-height:80vh;overflow-y:auto;">
+    <button class="modal-close" onclick="closeTradeSelector()">✕</button>
+    <div class="modal-title" id="trade-selector-title">Select Cards</div>
+    <div class="cards-grid" id="trade-selector-grid" style="justify-content:flex-start;"></div>
+  </div>
+</div>
+
+<script src="./app.js"></script>
+</body>
+</html>
+                    

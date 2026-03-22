@@ -693,11 +693,11 @@
           >
             <CardComponent {card} />
           </div>
-        {/each}
-      </div>
-      <button class="keep-btn" onclick={closePackReveal}>
-        🃏 Keep All Cards!
-      </button>
+    	  {/each}
+          </div>
+          <button class="keep-btn" onclick={closePackReveal}>
+            🃏 Add to Collection
+          </button>
     </div>
   {/if}
 {/if}
