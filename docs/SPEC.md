@@ -223,7 +223,6 @@ Per match tick (90 ticks = 90 simulated minutes):
 
 ## PWA
 - `registerType: 'autoUpdate'` — silent background updates
-- `InstallPrompt.svelte` — active install banner shown after 30s if not installed
 - `UpdatePrompt.svelte` — "🆕 Update available" banner on new deploy
 - Full offline: all assets + `players.json` pre-cached by Workbox
 - Manifest: `display: standalone`, `orientation: landscape` (desktop first)

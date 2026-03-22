@@ -229,11 +229,6 @@ Emit: `onclick` event
 - Active tab highlighted
 - Subtle save indicator
 
-`src/ui/components/InstallPrompt.svelte`
-- Listen for `beforeinstallprompt` event
-- Show after 30s if not already installed
-- "📲 Install FutCard as an app" banner, dismissible
-
 `src/ui/components/UpdatePrompt.svelte`
 - Listen for `vite-plugin-pwa` `needRefresh` event
 - Show "🆕 Update available — click to refresh" banner
@@ -453,7 +448,7 @@ jobs:
 17. Match page + match engine
 18. Upgrades system
 19. Portfolio page + SVG chart
-20. InstallPrompt + UpdatePrompt
+20. UpdatePrompt
 21. Unit tests
 22. PWA icons script
 23. GitHub Actions workflow
@@ -511,7 +506,7 @@ jobs:
   - card generator/utils
 - Steps 9-12 completed with functional MVP components/pages/systems:
   - Card/CardGrid/CardDetail
-  - UI primitives (Modal/Toast/Button/Nav/InstallPrompt/UpdatePrompt)
+  - UI primitives (Modal/Toast/Button/Nav/UpdatePrompt)
   - Onboarding + tabbed app shell
   - Market engine, trade AI, match engine, upgrades service
 - Steps 13-15 completed:

@@ -2,7 +2,6 @@
   import Nav from './ui/components/Nav.svelte'
   import Modal from './ui/components/Modal.svelte'
   import Button from './ui/components/Button.svelte'
-  import InstallPrompt from './ui/components/InstallPrompt.svelte'
   import UpdatePrompt from './ui/components/UpdatePrompt.svelte'
   import ToastContainer from './ui/components/ToastContainer.svelte'
   import OnboardingFlow from './features/onboarding/components/OnboardingFlow.svelte'
@@ -706,7 +705,6 @@
   {#if selectedCard}<CardDetail card={selectedCard} />{/if}
 </Modal>
 
-<InstallPrompt />
 <UpdatePrompt show={updateAvailable} />
 <ToastContainer items={toasts} />
 
