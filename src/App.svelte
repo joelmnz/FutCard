@@ -1038,7 +1038,21 @@
   .packs-grid {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: 1fr;
+  }
+
+  /* Tablet: 2 columns */
+  @media (min-width: 640px) {
+    .packs-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  /* Desktop: 3 columns */
+  @media (min-width: 1024px) {
+    .packs-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
   }
 
   .pack-card {
