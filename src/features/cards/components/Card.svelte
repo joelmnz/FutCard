@@ -286,7 +286,7 @@
   }
 
   /* ---- Size variants ---- */
-  .full  { width: 100%; max-width: none; font-size: clamp(14px, 7cqi, 18px); margin: 0; }
+  .full  { width: 100%; max-width: none; font-size: clamp(14px, 8cqi, 24px); margin: 0; }
   
   .mini  { width: 100%; max-width: 280px; font-size: clamp(12px, 7cqi, 16px); margin: 0 auto; }
   

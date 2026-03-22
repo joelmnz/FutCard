@@ -712,9 +712,8 @@
 
 <style>
   main {
-    padding: 1rem;
-    max-width: 1400px;
-    margin: 0 auto;
+    padding: 2rem;
+    max-width: 100%;
   }
 
   .page {
@@ -881,9 +880,9 @@
   /* ---- Card row (responsive grid instead of horizontal scroll) ---- */
   .card-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-    gap: 1rem;
-    padding-bottom: 6px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 12px;
   }
   .card-row > :global(.card-wrap) {
     width: 100%;
