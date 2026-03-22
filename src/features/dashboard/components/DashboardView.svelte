@@ -3,6 +3,8 @@
   import type { MarketListing } from '../../../core/types/market.types'
   import CardComponent from '../../cards/components/Card.svelte'
   import { formatCoins } from '../../cards/card.utils'
+  import StatBoxGrid from '../../../ui/components/StatBoxGrid.svelte'
+  import StatBox from '../../../ui/components/StatBox.svelte'
 
   interface RarityCounts {
     legendary: number
@@ -54,24 +56,12 @@
     </div>
   </div>
 
-  <div class="stat-boxes">
-    <div class="stat-box">
-      <span class="stat-box-val">{cardCount}</span>
-      <span class="stat-box-label">Cards</span>
-    </div>
-    <div class="stat-box legendary">
-      <span class="stat-box-val">{collectionByRarity.legendary}</span>
-      <span class="stat-box-label">Legendary</span>
-    </div>
-    <div class="stat-box epic">
-      <span class="stat-box-val">{collectionByRarity.epic}</span>
-      <span class="stat-box-label">Epic</span>
-    </div>
-    <div class="stat-box value">
-      <span class="stat-box-val">{formatCoins(portfolioValue)}</span>
-      <span class="stat-box-label">Total Value</span>
-    </div>
-  </div>
+  <StatBoxGrid>
+    <StatBox value={cardCount} label="Cards" />
+    <StatBox value={collectionByRarity.legendary} label="Legendary" variant="legendary" />
+    <StatBox value={collectionByRarity.epic} label="Epic" variant="epic" />
+    <StatBox value={formatCoins(portfolioValue)} label="Total Value" variant="value" />
+  </StatBoxGrid>
 
   {#if topCards.length}
     <div class="section-header">
@@ -118,11 +108,6 @@
 </div>
 
 <style>
-  .page {
-    display: grid;
-    gap: 1.25rem;
-  }
-
   .hero-greeting {
     display: flex;
     align-items: center;
@@ -166,50 +151,6 @@
     font-size: 1.4rem;
     font-weight: 900;
     color: var(--accent-gold);
-  }
-
-  .stat-boxes {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-    gap: 1rem;
-  }
-
-  .stat-box {
-    background: var(--bg-panel);
-    border: 1px solid #1e3050;
-    border-radius: var(--radius-md);
-    padding: 1rem;
-    text-align: center;
-    transition: transform 0.15s ease;
-  }
-
-  .stat-box:hover {
-    transform: translateY(-2px);
-  }
-
-  .stat-box.legendary { border-color: rgba(255, 215, 0, 0.35); background: rgba(255, 215, 0, 0.04); }
-  .stat-box.epic { border-color: rgba(206, 147, 216, 0.35); background: rgba(206, 147, 216, 0.04); }
-  .stat-box.value { border-color: rgba(0, 255, 135, 0.3); background: rgba(0, 255, 135, 0.04); }
-
-  .stat-box-val {
-    display: block;
-    font-size: 1.8rem;
-    font-weight: 900;
-    color: var(--text-primary);
-    line-height: 1;
-    margin-bottom: 4px;
-  }
-
-  .stat-box.legendary .stat-box-val { color: var(--accent-gold); }
-  .stat-box.epic .stat-box-val { color: var(--accent-purple); }
-  .stat-box.value .stat-box-val { color: var(--accent-green); font-size: 1.3rem; }
-
-  .stat-box-label {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    font-weight: 700;
   }
 
   .section-header {

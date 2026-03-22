@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatCoins } from '../../cards/card.utils'
+  import PageHeader from '../../../ui/components/PageHeader.svelte'
 
   interface PackDefinition {
     name: string
@@ -26,10 +27,9 @@
 </script>
 
 <div class="page">
-  <div class="page-header">
-    <h2>📦 Pack Store</h2>
+  <PageHeader title="📦 Pack Store">
     <span class="coins-badge">🪙 {formatCoins(coins)}</span>
-  </div>
+  </PageHeader>
 
   <div class="packs-grid">
     {#each packs as { key, pack }}
@@ -55,26 +55,6 @@
 </div>
 
 <style>
-  .page {
-    display: grid;
-    gap: 1.25rem;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .page-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: var(--text-primary);
-  }
-
   .coins-badge {
     background: rgba(255, 215, 0, 0.1);
     border: 1px solid rgba(255, 215, 0, 0.25);

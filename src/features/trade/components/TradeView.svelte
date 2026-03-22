@@ -3,6 +3,7 @@
   import type { Bot } from '../../../core/types/trade.types'
   import CardComponent from '../../cards/components/Card.svelte'
   import Button from '../../../ui/components/Button.svelte'
+  import PageHeader from '../../../ui/components/PageHeader.svelte'
 
   interface Props {
     bots: Bot[]
@@ -18,10 +19,7 @@
 </script>
 
 <div class="page">
-  <div class="page-header">
-    <h2>🤝 Trade Center</h2>
-  </div>
-  <p class="page-intro">Challenge an AI bot! Pick your bot, then propose a quick trade.</p>
+  <PageHeader title="🤝 Trade Center" subtitle="Challenge an AI bot! Pick your bot, then propose a quick trade." />
 
   <div class="bot-chips">
     {#each bots as bot}
@@ -64,32 +62,6 @@
 </div>
 
 <style>
-  .page {
-    display: grid;
-    gap: 1.25rem;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .page-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: var(--text-primary);
-  }
-
-  .page-intro {
-    color: var(--text-muted);
-    margin: -0.5rem 0 0;
-    font-size: 0.9rem;
-  }
-
   .bot-chips {
     display: flex;
     gap: 0.6rem;

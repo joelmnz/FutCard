@@ -4,6 +4,7 @@
   import CardComponent from '../../cards/components/Card.svelte'
   import { formatCoins } from '../../cards/card.utils'
   import Button from '../../../ui/components/Button.svelte'
+  import PageHeader from '../../../ui/components/PageHeader.svelte'
 
   interface Props {
     teamCards: Card[]
@@ -17,10 +18,7 @@
 </script>
 
 <div class="page">
-  <div class="page-header">
-    <h2>⚽ Match</h2>
-  </div>
-  <p class="page-intro">Pick your best 11 cards and take on an AI team!</p>
+  <PageHeader title="⚽ Match" subtitle="Pick your best 11 cards and take on an AI team!" />
 
   {#if matchResult}
     <div class="match-result">
@@ -59,32 +57,6 @@
 </div>
 
 <style>
-  .page {
-    display: grid;
-    gap: 1.25rem;
-  }
-
-  .page-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-  }
-
-  .page-header h2 {
-    margin: 0;
-    font-size: 1.5rem;
-    font-weight: 900;
-    color: var(--text-primary);
-  }
-
-  .page-intro {
-    color: var(--text-muted);
-    margin: -0.5rem 0 0;
-    font-size: 0.9rem;
-  }
-
   .match-result {
     display: flex;
     flex-direction: column;
