@@ -17,7 +17,10 @@
     <button class="nav-tab" onclick="showPage('market')">🏪 Market</button>
     <button class="nav-tab" onclick="showPage('trade')">🔄 Trade</button>
   </div>
-  <div class="coins-display">🪙 <span id="coins-display">1,000,000</span></div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="coins-display">🪙 <span id="coins-display">1,000,000</span></div>
+    <button class="btn btn-outline btn-sm" onclick="resetGame()">🔄 New Game</button>
+  </div>
 </nav>
 
 <!-- TOAST -->
@@ -97,11 +100,11 @@
   </div>
 
   <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;">
-    <button class="rarity-filter-btn active-all" onclick="filterCollection('all',this)">All</button>
-    <button class="rarity-filter-btn" onclick="filterCollection('legendary',this)">🟠 Legendary</button>
-    <button class="rarity-filter-btn" onclick="filterCollection('epic',this)">🟣 Epic</button>
-    <button class="rarity-filter-btn" onclick="filterCollection('rare',this)">🔵 Rare</button>
-    <button class="rarity-filter-btn" onclick="filterCollection('common',this)">⚪ Common</button>
+    <button class="rarity-filter-btn active-all" data-rarity="all" onclick="filterCollection('all',this)">All</button>
+    <button class="rarity-filter-btn" data-rarity="legendary" onclick="filterCollection('legendary',this)">🟠 Legendary</button>
+    <button class="rarity-filter-btn" data-rarity="epic" onclick="filterCollection('epic',this)">🟣 Epic</button>
+    <button class="rarity-filter-btn" data-rarity="rare" onclick="filterCollection('rare',this)">🔵 Rare</button>
+    <button class="rarity-filter-btn" data-rarity="common" onclick="filterCollection('common',this)">⚪ Common</button>
   </div>
 
   <div class="cards-grid" id="collection-grid"></div>

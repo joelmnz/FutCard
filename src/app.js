@@ -84,19 +84,186 @@ function generatePlayer(id, rarityOverride) {
 // ============================================================
 // GAME STATE
 // ============================================================
-let state = {
-  coins: 1000000,
-  collection: [],
-  market: [],
-  nextId: 1,
-  bots: [],
-  selectedBot: 0,
-  yourTradeCards: [],
-  botTradeCards: [],
-  sellCardId: null,
-  collectionFilter: 'all',
-  collectionSort: 'overall'
-};
+function createInitialState() {
+  return {
+    coins: 1000000,
+    collection: [],
+    market: [],
+    nextId: 1,
+    bots: [],
+    selectedBot: 0,
+    yourTradeCards: [],
+    botTradeCards: [],
+    sellCardId: null,
+    collectionFilter: 'all',
+    collectionSort: 'overall'
+  };
+}
+
+let state = createInitialState();
+
+const SAVE_KEY = 'futcard-save-v1';
+const VALID_COLLECTION_FILTERS = new Set(['all', 'legendary', 'epic', 'rare', 'common']);
+const VALID_COLLECTION_SORTS = new Set(['overall', 'rarity', 'price']);
+
+let pendingPackCards = [];
+let recoveredPackCards = 0;
+let storageAvailable;
+let storageErrorShown = false;
+
+function hasStorageAccess() {
+  if (typeof storageAvailable === 'boolean') return storageAvailable;
+
+  try {
+    const testKey = '__futcard_storage_test__';
+    window.localStorage.setItem(testKey, '1');
+    window.localStorage.removeItem(testKey);
+    storageAvailable = true;
+  } catch {
+    storageAvailable = false;
+  }
+
+  return storageAvailable;
+}
+
+function normalizeCard(card) {
+  if (!card || typeof card !== 'object') return null;
+
+  const priceHistory = Array.isArray(card.priceHistory)
+    ? card.priceHistory.filter((price) => Number.isFinite(price)).slice(-20)
+    : [];
+  const basePrice = Number.isFinite(card.basePrice) ? Math.round(card.basePrice) : 1000;
+  const currentPrice = Number.isFinite(card.currentPrice) ? Math.round(card.currentPrice) : basePrice;
+
+  return {
+    id: Number.isInteger(card.id) ? card.id : 0,
+    name: typeof card.name === 'string' ? card.name : randName(),
+    club: typeof card.club === 'string' ? card.club : CLUBS[0],
+    nation: typeof card.nation === 'string' ? card.nation : NATIONS[0],
+    position: typeof card.position === 'string' ? card.position : POSITIONS[0],
+    emoji: typeof card.emoji === 'string' ? card.emoji : PLAYER_EMOJIS[0],
+    rarity: ['legendary', 'epic', 'rare', 'common'].includes(card.rarity) ? card.rarity : 'common',
+    overall: Number.isFinite(card.overall) ? Math.round(card.overall) : 50,
+    pace: Number.isFinite(card.pace) ? Math.round(card.pace) : 50,
+    shooting: Number.isFinite(card.shooting) ? Math.round(card.shooting) : 50,
+    passing: Number.isFinite(card.passing) ? Math.round(card.passing) : 50,
+    dribbling: Number.isFinite(card.dribbling) ? Math.round(card.dribbling) : 50,
+    defense: Number.isFinite(card.defense) ? Math.round(card.defense) : 50,
+    basePrice,
+    currentPrice,
+    priceHistory: priceHistory.length > 0 ? priceHistory : [currentPrice],
+    listed: Boolean(card.listed),
+    listPrice: Number.isFinite(card.listPrice) ? Math.max(0, Math.round(card.listPrice)) : 0
+  };
+}
+
+function normalizeBot(bot, index) {
+  if (!bot || typeof bot !== 'object') return null;
+
+  return {
+    id: Number.isInteger(bot.id) ? bot.id : index,
+    name: typeof bot.name === 'string' ? bot.name : `Bot ${index + 1}`,
+    emoji: typeof bot.emoji === 'string' ? bot.emoji : '🤖',
+    style: ['fair', 'greedy', 'generous', 'elite'].includes(bot.style) ? bot.style : 'fair',
+    cards: Array.isArray(bot.cards) ? bot.cards.map(normalizeCard).filter(Boolean) : []
+  };
+}
+
+function buildSaveData() {
+  return {
+    version: 1,
+    coins: state.coins,
+    collection: state.collection,
+    market: state.market,
+    nextId: state.nextId,
+    bots: state.bots,
+    selectedBot: state.selectedBot,
+    collectionFilter: state.collectionFilter,
+    collectionSort: state.collectionSort,
+    pendingPackCards
+  };
+}
+
+function saveState() {
+  if (!hasStorageAccess()) return false;
+
+  try {
+    window.localStorage.setItem(SAVE_KEY, JSON.stringify(buildSaveData()));
+    storageErrorShown = false;
+    return true;
+  } catch (error) {
+    console.error('Failed to save FutCard state.', error);
+    if (!storageErrorShown && document.getElementById('toast-container')) {
+      showToast('⚠️ Could not save progress in this browser session.', 'warning');
+      storageErrorShown = true;
+    }
+    return false;
+  }
+}
+
+function loadState() {
+  if (!hasStorageAccess()) return false;
+
+  try {
+    const raw = window.localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object') return false;
+
+    const nextState = createInitialState();
+    nextState.coins = Number.isFinite(parsed.coins) ? Math.max(0, Math.round(parsed.coins)) : nextState.coins;
+    nextState.collection = Array.isArray(parsed.collection) ? parsed.collection.map(normalizeCard).filter(Boolean) : [];
+    nextState.market = Array.isArray(parsed.market) ? parsed.market.map(normalizeCard).filter(Boolean) : [];
+    nextState.bots = Array.isArray(parsed.bots) ? parsed.bots.map(normalizeBot).filter(Boolean) : [];
+    nextState.nextId = Number.isInteger(parsed.nextId) ? parsed.nextId : nextState.nextId;
+    nextState.selectedBot = Number.isInteger(parsed.selectedBot) ? parsed.selectedBot : nextState.selectedBot;
+    nextState.collectionFilter = VALID_COLLECTION_FILTERS.has(parsed.collectionFilter)
+      ? parsed.collectionFilter
+      : nextState.collectionFilter;
+    nextState.collectionSort = VALID_COLLECTION_SORTS.has(parsed.collectionSort)
+      ? parsed.collectionSort
+      : nextState.collectionSort;
+
+    if (nextState.market.length === 0 || nextState.bots.length === 0) return false;
+
+    const recovered = Array.isArray(parsed.pendingPackCards)
+      ? parsed.pendingPackCards.map(normalizeCard).filter(Boolean)
+      : [];
+
+    recoveredPackCards = recovered.length;
+    if (recovered.length > 0) {
+      nextState.collection.push(...recovered);
+    }
+
+    const allCards = [
+      ...nextState.collection,
+      ...nextState.market,
+      ...nextState.bots.flatMap((bot) => bot.cards)
+    ];
+    const maxCardId = allCards.reduce((maxId, card) => Math.max(maxId, card.id || 0), 0);
+    nextState.nextId = Math.max(nextState.nextId, maxCardId + 1);
+    nextState.selectedBot = Math.min(nextState.selectedBot, Math.max(0, nextState.bots.length - 1));
+
+    state = nextState;
+    pendingPackCards = [];
+    return true;
+  } catch (error) {
+    console.error('Failed to load FutCard save.', error);
+    return false;
+  }
+}
+
+function resetGame() {
+  const confirmed = window.confirm('Start a new game? Your saved FutCard progress will be erased.');
+  if (!confirmed) return;
+
+  if (hasStorageAccess()) {
+    window.localStorage.removeItem(SAVE_KEY);
+  }
+
+  window.location.reload();
+}
 
 function generateMarket() {
   const count = 120;
@@ -153,6 +320,7 @@ function fluctuatePrices() {
   renderPriceTicker();
   if (document.getElementById('page-market').classList.contains('active')) renderMarket();
   if (document.getElementById('page-dashboard').classList.contains('active')) renderDashboard();
+  saveState();
 }
 
 // ============================================================
@@ -306,6 +474,13 @@ function renderPriceTicker() {
 function renderCollection() {
   let cards = [...state.collection];
 
+  document.querySelectorAll('.rarity-filter-btn').forEach((button) => {
+    button.className = 'rarity-filter-btn';
+    if (button.dataset.rarity === state.collectionFilter) {
+      button.classList.add('active-' + state.collectionFilter);
+    }
+  });
+
   if (state.collectionFilter !== 'all') {
     cards = cards.filter((c) => c.rarity === state.collectionFilter);
   }
@@ -332,6 +507,7 @@ function renderCollection() {
 function sortCollection(by) {
   state.collectionSort = by;
   renderCollection();
+  saveState();
 }
 
 function filterCollection(rarity, btn) {
@@ -341,6 +517,7 @@ function filterCollection(rarity, btn) {
   });
   btn.classList.add('active-' + rarity);
   renderCollection();
+  saveState();
 }
 
 // ============================================================
@@ -375,8 +552,6 @@ function weightedRarity(weights) {
   return 'common';
 }
 
-let pendingPackCards = [];
-
 function openPack(type) {
   const config = PACK_CONFIG[type];
   if (state.coins < config.cost) {
@@ -401,6 +576,7 @@ function openPack(type) {
     </div>`).join('');
 
   overlay.classList.add('show');
+  saveState();
 
   pendingPackCards.forEach((c, i) => {
     setTimeout(() => {
@@ -412,6 +588,7 @@ function openPack(type) {
 function closePack() {
   pendingPackCards.forEach((c) => state.collection.push(c));
   pendingPackCards = [];
+  saveState();
   document.getElementById('pack-overlay').classList.remove('show');
   showToast('✅ Cards added to your collection!', 'success');
   updateCoinsDisplay();
@@ -465,6 +642,7 @@ function buyCard(id) {
   newCard.listed = true;
   newCard.listPrice = newCard.currentPrice;
   state.market.push(newCard);
+  saveState();
 }
 
 // ============================================================
@@ -508,11 +686,13 @@ function confirmSell() {
   card.listed = true;
   card.listPrice = price;
   state.market.push(card);
+  saveState();
 
   if (Math.random() < 0.5) {
     setTimeout(() => {
       state.market = state.market.filter((c) => c.id !== card.id);
       state.coins += price;
+      saveState();
       updateCoinsDisplay();
       showToast(`💰 ${card.name} sold for 🪙${formatCoins(price)}!`, 'success');
       if (document.getElementById('page-market').classList.contains('active')) renderMarket();
@@ -544,6 +724,7 @@ function selectBot(i) {
   state.selectedBot = i;
   state.botTradeCards = [];
   renderTrade();
+  saveState();
 }
 
 function renderBotCollection() {
@@ -707,6 +888,7 @@ function proposeTrade() {
         state.collection.push(c);
       });
       state.coins -= coinOffer;
+      saveState();
       updateCoinsDisplay();
 
       showToast(`✅ ${bot.emoji} ${bot.name} accepted the trade!`, 'success');
@@ -791,14 +973,21 @@ function showToast(msg, type = 'info') {
 // INIT
 // ============================================================
 function init() {
-  generateMarket();
-  generateBots();
-  giveStarterCards();
+  const loaded = loadState();
+  if (!loaded) {
+    generateMarket();
+    generateBots();
+    giveStarterCards();
+    saveState();
+  }
+
   updateCoinsDisplay();
   renderDashboard();
   renderPriceTicker();
+  renderCollection();
 
   setInterval(fluctuatePrices, 8000);
+  window.addEventListener('beforeunload', saveState);
 
   document.getElementById('card-modal').addEventListener('click', function(e) {
     if (e.target === this) closeCardModal();
@@ -810,7 +999,14 @@ function init() {
     if (e.target === this) closeTradeSelector();
   });
 
-  showToast('🎉 Welcome to FutCard! You start with 🪙1,000,000 coins!', 'success');
+  if (loaded) {
+    showToast('💾 Saved progress loaded.', 'success');
+    if (recoveredPackCards > 0) {
+      showToast(`📦 Recovered ${recoveredPackCards} unopened pack card${recoveredPackCards === 1 ? '' : 's'}.`, 'warning');
+    }
+  } else {
+    showToast('🎉 Welcome to FutCard! You start with 🪙1,000,000 coins!', 'success');
+  }
 }
 
 init();
