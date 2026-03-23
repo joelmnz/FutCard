@@ -11,6 +11,7 @@ function makeSvg(size: number) {
 </svg>`
 }
 
+await Bun.write(`${outDir}/../favicon.svg`, makeSvg(64))
 await Bun.write(`${outDir}/icon-192.svg`, makeSvg(192))
 await Bun.write(`${outDir}/icon-512.svg`, makeSvg(512))
 await Bun.write(`${outDir}/maskable-icon.svg`, makeSvg(512))
