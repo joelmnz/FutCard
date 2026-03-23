@@ -57,7 +57,8 @@ nav {
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
-  transition: all 0.2s;
+  transition: background-color 0.2s, color 0.2s;
+  touch-action: manipulation;
 }
 .nav-tab:hover, .nav-tab.active {
   background: var(--accent);
@@ -75,6 +76,7 @@ nav {
   position: relative;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s;
+  touch-action: manipulation;
   width: 160px;
   min-height: 220px;
   display: flex;
@@ -115,7 +117,7 @@ nav {
   position: absolute;
   top: 8px;
   right: 8px;
-  font-size: 0.55rem;
+  font-size: 0.7rem;
   font-weight: 800;
   padding: 2px 6px;
   border-radius: 4px;
@@ -139,7 +141,7 @@ nav {
 .legendary .card-overall { color: var(--gold); }
 
 .card-position {
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 2px;
   color: var(--muted);
@@ -159,7 +161,7 @@ nav {
 }
 
 .card-name {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -167,7 +169,7 @@ nav {
   line-height: 1.2;
 }
 .card-club {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-bottom: 10px;
 }
@@ -177,7 +179,7 @@ nav {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 3px;
-  font-size: 0.6rem;
+  font-size: 0.74rem;
 }
 .stat-item {
   display: flex;
@@ -191,7 +193,7 @@ nav {
 
 .card-price {
   margin-top: 8px;
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 700;
   color: var(--gold);
 }
@@ -226,7 +228,8 @@ nav {
   font-weight: 700;
   cursor: pointer;
   font-size: 0.9rem;
-  transition: all 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s, background-color 0.2s;
+  touch-action: manipulation;
 }
 .btn-primary { background: var(--accent); color: #000; }
 .btn-primary:hover { background: #00f0c0; transform: translateY(-1px); }
@@ -258,7 +261,7 @@ nav {
   padding: 28px;
   text-align: center;
   border: 2px solid transparent;
-  transition: all 0.3s;
+  transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
   position: relative;
   overflow: hidden;
 }
@@ -318,7 +321,7 @@ nav {
 .pack-reveal-card {
   opacity: 0;
   transform: rotateY(90deg) scale(0.8);
-  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: opacity 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .pack-reveal-card.revealed {
   opacity: 1;
@@ -371,7 +374,7 @@ nav {
   transform: translateX(-50%);
   white-space: nowrap;
   opacity: 0;
-  transition: all 0.2s;
+  transition: opacity 0.2s, bottom 0.2s;
   z-index: 10;
 }
 .market-card-wrap:hover .market-buy-btn { opacity: 1; bottom: -4px; }
@@ -391,7 +394,7 @@ nav {
   border: 1px solid rgba(255,255,255,0.05);
 }
 .stat-box-val { font-size: 1.8rem; font-weight: 900; color: var(--accent); }
-.stat-box-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+.stat-box-label { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
 
 /* TRADE PAGE */
 .trade-layout {
@@ -424,7 +427,7 @@ nav {
   font-size: 0.85rem;
   margin-bottom: 12px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: border-color 0.2s;
   padding: 8px;
   flex-wrap: wrap;
   gap: 8px;
@@ -461,7 +464,7 @@ nav {
   padding: 8px 16px;
   cursor: pointer;
   font-size: 0.85rem;
-  transition: all 0.2s;
+  transition: border-color 0.2s, color 0.2s;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -519,7 +522,7 @@ nav {
   padding: 12px 20px;
   font-size: 0.9rem;
   font-weight: 600;
-  animation: slideIn 0.3s ease, fadeOut 0.3s ease 2.7s forwards;
+  animation: slideIn 0.3s ease, fadeOut 0.5s ease 4s forwards;
   max-width: 300px;
 }
 .toast.success { border-color: #2ecc71; }
@@ -540,9 +543,9 @@ nav {
   border: 1px solid rgba(255,255,255,0.05);
 }
 .ticker-item { display: flex; flex-direction: column; align-items: center; min-width: 80px; }
-.ticker-name { font-size: 0.65rem; color: var(--muted); }
+.ticker-name { font-size: 0.75rem; color: var(--muted); }
 .ticker-price { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
-.ticker-change { font-size: 0.65rem; }
+.ticker-change { font-size: 0.75rem; }
 .ticker-change.up { color: #2ecc71; }
 .ticker-change.down { color: #e74c3c; }
 
@@ -577,7 +580,7 @@ nav {
   border-radius: 8px;
   padding: 6px;
   text-align: center;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   position: relative;
 }
 .mini-card.common { background: linear-gradient(160deg,#2c3e50,#1a252f); border: 1px solid var(--common); }
@@ -585,7 +588,7 @@ nav {
 .mini-card.epic { background: linear-gradient(160deg,#2d1b4e,#1a0d30); border: 1px solid var(--epic); }
 .mini-card.legendary { background: linear-gradient(160deg,#3d1a00,#1f0d00); border: 1px solid var(--legendary); }
 .mini-card-overall { font-size: 1rem; font-weight: 900; }
-.mini-card-name { font-size: 0.55rem; font-weight: 700; margin-top: 2px; }
+.mini-card-name { font-size: 0.7rem; font-weight: 700; margin-top: 2px; }
 .mini-card-remove {
   position: absolute;
   top: -6px;
@@ -598,7 +601,7 @@ nav {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   font-weight: 900;
   color: #fff;
   border: none;
@@ -621,10 +624,117 @@ nav {
   font-weight: 700;
   background: var(--panel);
   color: var(--muted);
-  transition: all 0.2s;
+  transition: border-color 0.2s, color 0.2s, background-color 0.2s;
 }
 .rarity-filter-btn.active-common { border-color: var(--common); color: var(--common); }
 .rarity-filter-btn.active-rare { border-color: var(--rare); color: var(--rare); }
 .rarity-filter-btn.active-epic { border-color: var(--epic); color: var(--epic); }
 .rarity-filter-btn.active-legendary { border-color: var(--legendary); color: var(--legendary); }
 .rarity-filter-btn.active-all { border-color: var(--accent); color: var(--accent); }
+
+/* FOCUS VISIBLE */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* DAILY GOALS */
+.goals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.goal-card {
+  background: var(--panel);
+  border-radius: 14px;
+  padding: 16px;
+  border: 1px solid rgba(255,255,255,0.07);
+  position: relative;
+  overflow: hidden;
+}
+.goal-card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.goal-progress-bar {
+  height: 8px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+.goal-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--accent);
+  transition: width 0.5s ease;
+}
+.goal-progress-fill.complete { background: #2ecc71; }
+.goal-label { font-size: 0.8rem; color: var(--muted); }
+.goal-complete-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.3rem;
+}
+
+/* LEGENDARY CELEBRATION OVERLAY */
+#legendary-flash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9997;
+  pointer-events: none;
+  animation: legendaryFlashBg 0.35s ease-out forwards;
+}
+.legendary-flash-content {
+  text-align: center;
+  animation: legendaryPopIn 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.legendary-flash-title {
+  font-size: 3.5rem;
+  font-weight: 900;
+  color: var(--legendary);
+  text-shadow: 0 0 40px rgba(255,107,53,0.9);
+  letter-spacing: 3px;
+}
+.legendary-flash-name {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--gold);
+  margin-top: 10px;
+  text-shadow: 0 0 20px rgba(255,215,0,0.7);
+}
+@keyframes legendaryFlashBg {
+  0%   { background: rgba(255,107,53,0.22); }
+  100% { background: transparent; }
+}
+@keyframes legendaryPopIn {
+  0%   { transform: scale(0.35); opacity: 0; }
+  100% { transform: scale(1);    opacity: 1; }
+}
+
+/* COINS FLASH ANIMATION */
+@keyframes coinFlash {
+  0%   { box-shadow: 0 0 0 rgba(255,215,0,0); }
+  40%  { box-shadow: 0 0 20px rgba(255,215,0,0.85); transform: scale(1.1); }
+  100% { box-shadow: 0 0 0 rgba(255,215,0,0); transform: scale(1); }
+}
+.coins-display.coins-flash { animation: coinFlash 0.5s ease-out; }
+
+/* PREFERS REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

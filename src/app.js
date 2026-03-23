@@ -1,4 +1,103 @@
 // ============================================================
+// SOUND SYSTEM (Web Audio API — no external files)
+// ============================================================
+let _audioCtx = null;
+function _getAudioCtx() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e) {}
+  }
+  return _audioCtx;
+}
+function _tone(freq, type, dur, vol = 0.25, delay = 0) {
+  try {
+    const ctx = _getAudioCtx(); if (!ctx) return;
+    const t = ctx.currentTime + delay;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(vol, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t); osc.stop(t + dur + 0.05);
+  } catch(e) {}
+}
+function _whoosh(dur = 0.35) {
+  try {
+    const ctx = _getAudioCtx(); if (!ctx) return;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / data.length);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const flt = ctx.createBiquadFilter(); flt.type = 'bandpass'; flt.frequency.value = 900; flt.Q.value = 0.5;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.28, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    src.connect(flt); flt.connect(gain); gain.connect(ctx.destination); src.start();
+  } catch(e) {}
+}
+function soundPackOpen()    { _whoosh(0.4); _tone(300,'sine',0.2,0.18,0.2); _tone(500,'sine',0.2,0.18,0.37); }
+function soundCardFlip()    { _tone(680,'square',0.04,0.07); }
+function soundLegendary()   { [523,659,784,1047].forEach((f,i) => _tone(f,'sine',0.38,0.28,i*0.13)); _tone(1047,'triangle',0.75,0.22,0.55); }
+function soundEpic()        { [440,554,659].forEach((f,i) => _tone(f,'sine',0.28,0.24,i*0.1)); }
+function soundCoin()        { _tone(880,'sine',0.12,0.22); _tone(1100,'sine',0.1,0.16,0.1); }
+function soundBuy()         { _tone(440,'sine',0.1,0.2); _tone(550,'sine',0.1,0.2,0.1); }
+function soundError()       { _tone(160,'sawtooth',0.15,0.2); }
+function soundTradeAccept() { [330,415,523,659].forEach((f,i) => _tone(f,'sine',0.25,0.25,i*0.1)); }
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti(dur = 2600) {
+  const canvas = document.createElement('canvas');
+  canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998;';
+  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+  document.body.appendChild(canvas);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) { canvas.remove(); return; }
+  const colors = ['#FFD700','#FF6B35','#9B59B6','#3498DB','#00D4AA','#FF2D78','#2ecc71','#fff'];
+  const pieces = Array.from({length: 110}, () => ({
+    x: Math.random() * canvas.width, y: -20 - Math.random() * 80,
+    vx: (Math.random() - 0.5) * 6, vy: Math.random() * 3 + 2,
+    rot: Math.random() * 360, rotV: (Math.random() - 0.5) * 9,
+    w: Math.random() * 11 + 6, h: Math.random() * 5 + 3,
+    color: colors[Math.floor(Math.random() * colors.length)], alpha: 1
+  }));
+  const start = performance.now();
+  function frame(now) {
+    const el = now - start;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const fadeAt = dur * 0.55;
+    pieces.forEach(p => {
+      p.x += p.vx; p.vy += 0.07; p.y += p.vy; p.rot += p.rotV;
+      if (el > fadeAt) p.alpha = Math.max(0, 1 - (el - fadeAt) / (dur - fadeAt));
+      ctx.save(); ctx.globalAlpha = p.alpha;
+      ctx.translate(p.x, p.y); ctx.rotate(p.rot * Math.PI / 180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+      ctx.restore();
+    });
+    if (el < dur) requestAnimationFrame(frame); else canvas.remove();
+  }
+  requestAnimationFrame(frame);
+}
+
+// ============================================================
+// LEGENDARY CELEBRATION
+// ============================================================
+function showLegendaryCelebration(name) {
+  soundLegendary();
+  launchConfetti(3000);
+  const el = document.createElement('div');
+  el.id = 'legendary-flash';
+  el.innerHTML = `<div class="legendary-flash-content">
+    <div class="legendary-flash-title">🔥 LEGENDARY! 🔥</div>
+    <div class="legendary-flash-name">${name}</div>
+  </div>`;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2400);
+}
+
+// ============================================================
 // DATA — PLAYERS
 // ============================================================
 const PLAYER_EMOJIS = ['🧑','👨','👦','🧔','👱','🧑‍🦱','🧑‍🦰','🧑‍🦳'];
@@ -96,7 +195,10 @@ function createInitialState() {
     botTradeCards: [],
     sellCardId: null,
     collectionFilter: 'all',
-    collectionSort: 'overall'
+    collectionSort: 'overall',
+    packsOpened: 0,
+    marketBuys: 0,
+    tradesAccepted: 0
   };
 }
 
@@ -180,6 +282,9 @@ function buildSaveData() {
     selectedBot: state.selectedBot,
     collectionFilter: state.collectionFilter,
     collectionSort: state.collectionSort,
+    packsOpened: state.packsOpened || 0,
+    marketBuys: state.marketBuys || 0,
+    tradesAccepted: state.tradesAccepted || 0,
     pendingPackCards
   };
 }
@@ -224,8 +329,9 @@ function loadState() {
     nextState.collectionSort = VALID_COLLECTION_SORTS.has(parsed.collectionSort)
       ? parsed.collectionSort
       : nextState.collectionSort;
-
-    if (nextState.market.length === 0 || nextState.bots.length === 0) return false;
+    nextState.packsOpened = Number.isFinite(parsed.packsOpened) ? Math.max(0, Math.round(parsed.packsOpened)) : 0;
+    nextState.marketBuys = Number.isFinite(parsed.marketBuys) ? Math.max(0, Math.round(parsed.marketBuys)) : 0;
+    nextState.tradesAccepted = Number.isFinite(parsed.tradesAccepted) ? Math.max(0, Math.round(parsed.tradesAccepted)) : 0;
 
     const recovered = Array.isArray(parsed.pendingPackCards)
       ? parsed.pendingPackCards.map(normalizeCard).filter(Boolean)
@@ -246,6 +352,15 @@ function loadState() {
     nextState.selectedBot = Math.min(nextState.selectedBot, Math.max(0, nextState.bots.length - 1));
 
     state = nextState;
+
+    if (!Array.isArray(parsed.market)) {
+      generateMarket();
+    }
+
+    if (!Array.isArray(parsed.bots)) {
+      generateBots();
+    }
+
     pendingPackCards = [];
     return true;
   } catch (error) {
@@ -255,14 +370,18 @@ function loadState() {
 }
 
 function resetGame() {
-  const confirmed = window.confirm('Start a new game? Your saved FutCard progress will be erased.');
-  if (!confirmed) return;
+  document.getElementById('new-game-modal').classList.add('show');
+}
 
+function confirmNewGame() {
   if (hasStorageAccess()) {
     window.localStorage.removeItem(SAVE_KEY);
   }
-
   window.location.reload();
+}
+
+function closeNewGameModal() {
+  document.getElementById('new-game-modal').classList.remove('show');
 }
 
 function generateMarket() {
@@ -333,7 +452,12 @@ function formatCoins(n) {
 }
 
 function updateCoinsDisplay() {
-  document.getElementById('coins-display').textContent = formatCoins(state.coins);
+  const numEl = document.getElementById('coins-display');
+  numEl.textContent = formatCoins(state.coins);
+  const parent = numEl.parentElement;
+  parent.classList.remove('coins-flash');
+  void parent.offsetWidth;
+  parent.classList.add('coins-flash');
 }
 
 function rarityColor(r) {
@@ -446,6 +570,24 @@ function renderDashboard() {
   document.getElementById('hot-listings-grid').innerHTML = hot.map((c) =>
     `<div class="market-card-wrap">${buildCardHTML(c, { showBuy: true })}</div>`
   ).join('');
+
+  // Goals
+  const goalsData = [
+    { emoji: '🌟', title: 'Legendary Collector', desc: 'legendary cards', current: state.collection.filter(c => c.rarity === 'legendary').length, target: 5 },
+    { emoji: '📦', title: 'Pack Addict', desc: 'packs opened', current: state.packsOpened || 0, target: 20 },
+    { emoji: '🛒', title: 'Market Hunter', desc: 'market buys', current: state.marketBuys || 0, target: 10 },
+    { emoji: '🤝', title: 'Deal Maker', desc: 'trades completed', current: state.tradesAccepted || 0, target: 5 },
+  ];
+  document.getElementById('dashboard-goals').innerHTML = goalsData.map(g => {
+    const pct = Math.min(100, Math.round((g.current / g.target) * 100));
+    const done = g.current >= g.target;
+    return `<div class="goal-card">
+      <div class="goal-card-title">${g.emoji} ${g.title}</div>
+      <div class="goal-progress-bar"><div class="goal-progress-fill${done ? ' complete' : ''}" style="width:${pct}%"></div></div>
+      <div class="goal-label">${Math.min(g.current, g.target)} / ${g.target} ${g.desc}${done ? ' \u2014 Done!' : ''}</div>
+      ${done ? '<div class="goal-complete-badge">\u2705</div>' : ''}
+    </div>`;
+  }).join('');
 }
 
 // ============================================================
@@ -563,7 +705,9 @@ function openPack(type) {
     return;
   }
   state.coins -= config.cost;
+  state.packsOpened = (state.packsOpened || 0) + 1;
   updateCoinsDisplay();
+  soundPackOpen();
 
   pendingPackCards = [];
   for (let i = 0; i < config.count; i++) {
@@ -585,8 +729,18 @@ function openPack(type) {
   pendingPackCards.forEach((c, i) => {
     setTimeout(() => {
       document.getElementById('reveal-' + c.id)?.classList.add('revealed');
+      soundCardFlip();
     }, i * 200 + 100);
   });
+
+  const _legCards = pendingPackCards.filter(c => c.rarity === 'legendary');
+  const _hasEpic = pendingPackCards.some(c => c.rarity === 'epic');
+  const _revealEnd = pendingPackCards.length * 200 + 450;
+  if (_legCards.length > 0) {
+    setTimeout(() => showLegendaryCelebration(_legCards[0].name), _revealEnd);
+  } else if (_hasEpic) {
+    setTimeout(() => soundEpic(), _revealEnd);
+  }
 }
 
 function closePack() {
@@ -639,7 +793,9 @@ function buyCard(id) {
   state.market = state.market.filter((c) => c.id !== id);
   card.listed = false;
   state.collection.push(card);
+  state.marketBuys = (state.marketBuys || 0) + 1;
   updateCoinsDisplay();
+  soundBuy();
   showToast(`✅ Bought ${card.name} for 🪙${formatCoins(card.listPrice)}!`, 'success');
   renderMarket();
   const newCard = generatePlayer(state.nextId++, null);
@@ -698,6 +854,7 @@ function confirmSell() {
       state.coins += price;
       saveState();
       updateCoinsDisplay();
+      soundCoin();
       showToast(`💰 ${card.name} sold for 🪙${formatCoins(price)}!`, 'success');
       if (document.getElementById('page-market').classList.contains('active')) renderMarket();
     }, 2000 + Math.random() * 3000);
@@ -892,9 +1049,11 @@ function proposeTrade() {
         state.collection.push(c);
       });
       state.coins -= coinOffer;
+      state.tradesAccepted = (state.tradesAccepted || 0) + 1;
       saveState();
       updateCoinsDisplay();
-
+      soundTradeAccept();
+      launchConfetti(2000);
       showToast(`✅ ${bot.emoji} ${bot.name} accepted the trade!`, 'success');
       clearTrade();
       renderTrade();
@@ -970,7 +1129,98 @@ function showToast(msg, type = 'info') {
   toast.className = `toast ${type}`;
   toast.textContent = msg;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
+  setTimeout(() => toast.remove(), 4500);
+}
+
+// ============================================================
+// PWA UPDATE FLOW
+// ============================================================
+let serviceWorkerRegistration = null;
+let updatePromptVisible = false;
+let waitingForUpdateReload = false;
+
+function hideUpdatePrompt() {
+  const prompt = document.getElementById('pwa-update-prompt');
+  if (prompt) prompt.remove();
+  updatePromptVisible = false;
+}
+
+function showUpdatePrompt() {
+  if (updatePromptVisible || document.getElementById('pwa-update-prompt')) return;
+
+  const prompt = document.createElement('div');
+  prompt.id = 'pwa-update-prompt';
+  prompt.style.cssText = [
+    'position:fixed',
+    'left:16px',
+    'right:16px',
+    'bottom:16px',
+    'z-index:2000',
+    'display:flex',
+    'justify-content:center',
+    'pointer-events:none'
+  ].join(';');
+
+  prompt.innerHTML = `
+    <div style="pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;width:min(760px,100%);padding:16px 18px;border:1px solid rgba(0,255,135,0.35);border-radius:18px;background:rgba(8,12,20,0.96);box-shadow:0 24px 60px rgba(0,0,0,0.45);backdrop-filter:blur(16px);">
+      <div style="min-width:220px;flex:1;">
+        <div style="font-weight:900;font-size:1rem;margin-bottom:4px;">New FutCard version ready</div>
+        <div style="font-size:0.85rem;color:var(--muted);">Reload to get the latest game code, fixes, and card data.</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary btn-sm" id="pwa-update-reload">Reload now</button>
+        <button class="btn btn-outline btn-sm" id="pwa-update-later">Later</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(prompt);
+  updatePromptVisible = true;
+
+  prompt.querySelector('#pwa-update-reload').addEventListener('click', async () => {
+    waitingForUpdateReload = true;
+    hideUpdatePrompt();
+
+    if (serviceWorkerRegistration?.waiting) {
+      serviceWorkerRegistration.waiting.postMessage({ type: 'SKIP_WAITING' });
+      return;
+    }
+
+    window.location.reload();
+  });
+
+  prompt.querySelector('#pwa-update-later').addEventListener('click', hideUpdatePrompt);
+}
+
+async function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
+
+  try {
+    serviceWorkerRegistration = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
+
+    if (serviceWorkerRegistration.waiting && navigator.serviceWorker.controller) {
+      showUpdatePrompt();
+    }
+
+    serviceWorkerRegistration.addEventListener('updatefound', () => {
+      const installingWorker = serviceWorkerRegistration?.installing;
+      if (!installingWorker) return;
+
+      installingWorker.addEventListener('statechange', () => {
+        if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdatePrompt();
+        }
+      });
+    });
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (waitingForUpdateReload) {
+        window.location.reload();
+      }
+    });
+  } catch (error) {
+    console.warn('FutCard service worker registration failed.', error);
+  }
 }
 
 // ============================================================
@@ -989,6 +1239,7 @@ function init() {
   renderDashboard();
   renderPriceTicker();
   renderCollection();
+  registerServiceWorker();
 
   setInterval(fluctuatePrices, 8000);
   window.addEventListener('beforeunload', saveState);

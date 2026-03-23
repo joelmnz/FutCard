@@ -3,6 +3,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>⚽ FutCard - Football Card Trading</title>
+<meta name="theme-color" content="#08111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./favicon.svg">
+<link rel="apple-touch-icon" href="./icons/icon-192.svg">
 <link rel="stylesheet" href="./site.css">
 </head>
 <body>
@@ -11,11 +17,11 @@
 <nav>
   <div class="logo">⚽ FutCard</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('dashboard')">🏠 Home</button>
-    <button class="nav-tab" onclick="showPage('collection')">🃏 Collection</button>
-    <button class="nav-tab" onclick="showPage('packs')">📦 Packs</button>
-    <button class="nav-tab" onclick="showPage('market')">🏪 Market</button>
-    <button class="nav-tab" onclick="showPage('trade')">🔄 Trade</button>
+    <button class="nav-tab active" onclick="showPage('dashboard')" aria-label="Home dashboard">🏠 Home</button>
+    <button class="nav-tab" onclick="showPage('collection')" aria-label="My collection">🃏 Collection</button>
+    <button class="nav-tab" onclick="showPage('packs')" aria-label="Pack store">📦 Packs</button>
+    <button class="nav-tab" onclick="showPage('market')" aria-label="Transfer market">🏪 Market</button>
+    <button class="nav-tab" onclick="showPage('trade')" aria-label="Trade center">🔄 Trade</button>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <div class="coins-display">🪙 <span id="coins-display">1,000,000</span></div>
@@ -24,7 +30,7 @@
 </nav>
 
 <!-- TOAST -->
-<div class="toast-container" id="toast-container"></div>
+<div class="toast-container" id="toast-container" aria-live="polite" aria-atomic="false"></div>
 
 <!-- PACK OPENING OVERLAY -->
 <div class="pack-opening-overlay" id="pack-overlay">
@@ -35,10 +41,22 @@
   <div class="pack-reveal-area" id="pack-reveal-area"></div>
 </div>
 
+<!-- NEW GAME CONFIRM MODAL -->
+<div class="modal-overlay" id="new-game-modal" role="dialog" aria-modal="true" aria-labelledby="new-game-title">
+  <div class="modal">
+    <div class="modal-title" id="new-game-title">🔄 Start New Game?</div>
+    <p style="color:var(--muted);margin-bottom:24px;line-height:1.6;font-size:1rem;">This will <strong style="color:#e74c3c;">erase all your progress</strong> — your cards, coins, and collection will be gone forever!</p>
+    <div style="display:flex;gap:12px;">
+      <button class="btn btn-danger" onclick="confirmNewGame()">🗑️ Yes, Start Over</button>
+      <button class="btn btn-outline" onclick="closeNewGameModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- SELL MODAL -->
 <div class="modal-overlay" id="sell-modal">
   <div class="modal">
-    <button class="modal-close" onclick="closeSellModal()">✕</button>
+    <button class="modal-close" onclick="closeSellModal()" aria-label="Close">✕</button>
     <div class="modal-title">💰 List Card for Sale</div>
     <div id="sell-modal-card-info"></div>
     <label style="font-size:0.85rem;color:var(--muted);">Set your price (coins):</label>
@@ -54,7 +72,7 @@
 <!-- CARD DETAIL MODAL -->
 <div class="modal-overlay" id="card-modal">
   <div class="modal">
-    <button class="modal-close" onclick="closeCardModal()">✕</button>
+    <button class="modal-close" onclick="closeCardModal()" aria-label="Close">✕</button>
     <div id="card-modal-content"></div>
   </div>
 </div>
@@ -71,6 +89,11 @@
   <div class="price-ticker" id="price-ticker"></div>
 
   <div class="collection-stats" id="dashboard-stats"></div>
+
+  <div class="section-header" style="margin-top:28px;">
+    <div class="section-title">🎯 Goals</div>
+  </div>
+  <div class="goals-grid" id="dashboard-goals"></div>
 
   <div class="section-header" style="margin-top:32px;">
     <div class="section-title">⭐ Your Best Cards</div>
@@ -258,7 +281,7 @@
 <!-- TRADE SELECTOR MODAL -->
 <div class="modal-overlay" id="trade-selector-modal">
   <div class="modal" style="max-width:700px;max-height:80vh;overflow-y:auto;">
-    <button class="modal-close" onclick="closeTradeSelector()">✕</button>
+    <button class="modal-close" onclick="closeTradeSelector()" aria-label="Close">✕</button>
     <div class="modal-title" id="trade-selector-title">Select Cards</div>
     <div class="cards-grid" id="trade-selector-grid" style="justify-content:flex-start;"></div>
   </div>
