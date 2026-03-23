@@ -539,6 +539,10 @@ const PACK_CONFIG = {
   elite: {
     cost: 100000, count: 10, name: 'Elite Pack',
     weights: { common: 0, rare: 15, epic: 50, legendary: 35 }
+  },
+  ultimate: {
+    cost: 250000, count: 12, name: 'Ultimate Pack',
+    weights: { common: 0, rare: 10, epic: 45, legendary: 45 }
   }
 };
 

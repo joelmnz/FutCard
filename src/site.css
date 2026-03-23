@@ -3,6 +3,7 @@
   --silver: #C0C0C0;
   --bronze: #CD7F32;
   --legendary: #FF6B35;
+  --ultimate: #FF2D78;
   --epic: #9B59B6;
   --rare: #3498DB;
   --common: #95A5A6;
@@ -233,6 +234,8 @@ nav {
 .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255,215,0,0.4); }
 .btn-danger { background: #e74c3c; color: #fff; }
 .btn-danger:hover { background: #c0392b; }
+.btn-ultimate { background: linear-gradient(135deg, var(--ultimate), #ff6b9d); color: #fff; }
+.btn-ultimate:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(255, 45, 120, 0.45); }
 .btn-outline {
   background: transparent;
   border: 2px solid var(--accent);
@@ -273,6 +276,15 @@ nav {
 .pack-card.silver-pack { border-color: var(--silver); }
 .pack-card.gold-pack { border-color: var(--gold); }
 .pack-card.elite-pack { border-color: var(--legendary); }
+.pack-card.ultimate-pack {
+  border-color: var(--ultimate);
+  box-shadow: 0 0 22px rgba(255, 45, 120, 0.2);
+  animation: ultimate-glow 3s ease-in-out infinite;
+}
+@keyframes ultimate-glow {
+  0%, 100% { box-shadow: 0 0 22px rgba(255, 45, 120, 0.2); }
+  50%       { box-shadow: 0 0 38px rgba(255, 45, 120, 0.45); }
+}
 
 .pack-icon { font-size: 4rem; margin-bottom: 12px; display: block; }
 .pack-name { font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }

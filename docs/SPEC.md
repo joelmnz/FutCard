@@ -124,6 +124,7 @@ Price history is persisted only within each card record as `card.priceHistory` (
 | Silver | 🪙 15,000 | 7 | Common 35% / Rare 50% / Epic 15% |
 | Gold | 🪙 35,000 | 8 | Common 10% / Rare 50% / Epic 30% / Legendary 10% |
 | Elite | 🪙 100,000 | 10 | Rare 15% / Epic 50% / Legendary 35% |
+| Ultimate | 🪙 175,000 | 12 | Rare 10% / Epic 45% / Legendary 45% |
 
 - Animated card reveal (staggered 200ms per card, flip animation)
 - Cards added to collection on close
