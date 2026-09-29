@@ -24,7 +24,7 @@ FutCard is a client-side football card trading game for children: onboard a mana
 ## Work Guidance
 
 - Bun-first workflow: `bun run dev`, `bun run check`, `bun run build`, `bun test`.
-- Type checking (`bun run check`, `tsc --noEmit`) covers `index.ts` and `scripts/*.ts` only; `src/app.js` is untyped vanilla JavaScript. Verify game changes in the browser, not through `check`.
+- Type checking (`bun run check`, `tsc --noEmit`): strict TS applies to `index.ts` and `scripts/*.ts`. `src/*.js` files are part of the program for inference (`allowJs`, no explicit `include`) but are not type-checked (`checkJs` is off) — including more JavaScript under type checking is a `tsconfig.json` change, not automatic. Verify game changes in the browser, not through `check`.
 - Keep the app 100% client-side with relative asset paths so it works from the GitHub Pages project subpath. Do not add a backend, framework, or dependencies here.
 - `src/sw.js` is a template: the build replaces `__FUTCARD_SW_VERSION__` and `__FUTCARD_PRECACHE_URLS__`. Never commit resolved values into source.
 - Do not change gameplay, the save schema, the deployment workflow, or dependencies as part of documentation work.
@@ -32,7 +32,7 @@ FutCard is a client-side football card trading game for children: onboard a mana
 
 ## Verification
 
-- `bun run check` — TypeScript project checks (`tsc --noEmit`).
+- `bun run check` — TypeScript project checks (`tsc --noEmit`); reports errors in `index.ts` and `scripts/*.ts`, includes `src/*.js` for inference without type-checking them (`checkJs` off).
 - `bun test` — builds `dist/` and asserts the Pages artifact shape (fingerprinted assets, resolved service-worker placeholders, `.nojekyll`).
 - `bun run build` — produces the static `dist/` for Pages.
 - Documentation-only changes have no dedicated check; verify statements against the referenced files and commands instead.
