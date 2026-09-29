@@ -98,10 +98,21 @@ function showLegendaryCelebration(name) {
 }
 
 // ============================================================
-// DATA — PLAYERS
+// DATA — PLAYER ROSTER (2026/27 season snapshot)
 // ============================================================
+// Curated real-player card templates for all newly generated cards.
+// Club, nation and position were verified against Transfermarkt league and
+// club squad pages (saison_id 2026, fetched 2026-09-29); dual-nation players
+// use the national team recorded on their Transfermarkt profile. Per-player
+// sources: docs/roster-2026-27.md. Goalkeepers are excluded (outfield
+// snapshot); stats are authored plausible profiles bound to each player.
+// Overall, rarity, emoji and base price derive from the five stats, so a
+// stronger player always rates and prices at or above a weaker one.
+const ROSTER_SEASON = '2026/27';
+const ROSTER_AS_OF = '2026-09-29';
+
 const PLAYER_EMOJIS = ['🧑','👨','👦','🧔','👱','🧑‍🦱','🧑‍🦰','🧑‍🦳'];
-const POSITIONS = ['GK','CB','CB','LB','RB','CDM','CM','CM','CAM','LW','RW','ST','ST','CF'];
+// Legacy identity pools kept only as normalization fallbacks for corrupt v1 saves.
 const CLUBS = [
   'Manchester City','Arsenal','Liverpool','Chelsea','Manchester United',
   'Tottenham','Newcastle','Aston Villa','Brighton','West Ham',
@@ -130,6 +141,289 @@ function randName() {
          LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
 }
 
+const PLAYER_TEMPLATES = [
+  { name: 'Erling Haaland', club: 'Manchester City', nation: '🇳🇴', position: 'ST', pace: 89, shooting: 93, passing: 71, dribbling: 80, defense: 45, },
+  { name: 'Phil Foden', club: 'Manchester City', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CAM', pace: 80, shooting: 82, passing: 85, dribbling: 87, defense: 48, },
+  { name: 'Jérémy Doku', club: 'Manchester City', nation: '🇧🇪', position: 'LW', pace: 92, shooting: 72, passing: 76, dribbling: 91, defense: 32, },
+  { name: 'Rúben Dias', club: 'Manchester City', nation: '🇵🇹', position: 'CB', pace: 76, shooting: 40, passing: 74, dribbling: 68, defense: 88, },
+  { name: 'Marc Guéhi', club: 'Manchester City', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 76, shooting: 40, passing: 72, dribbling: 66, defense: 87, },
+  { name: 'Rayan Cherki', club: 'Manchester City', nation: '🇫🇷', position: 'CAM', pace: 65, shooting: 71, passing: 73, dribbling: 78, defense: 61, },
+  { name: 'Ayyoub Bouaddi', club: 'Manchester City', nation: '🇲🇦', position: 'CDM', pace: 53, shooting: 52, passing: 63, dribbling: 60, defense: 64, },
+  { name: 'Enzo Fernández', club: 'Manchester City', nation: '🇦🇷', position: 'CM', pace: 67, shooting: 67, passing: 81, dribbling: 79, defense: 69, },
+  { name: 'Bukayo Saka', club: 'Arsenal', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'RW', pace: 88, shooting: 87, passing: 87, dribbling: 92, defense: 52, },
+  { name: 'Martin Ødegaard', club: 'Arsenal', nation: '🇳🇴', position: 'CAM', pace: 76, shooting: 82, passing: 93, dribbling: 88, defense: 52, },
+  { name: 'Declan Rice', club: 'Arsenal', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CM', pace: 76, shooting: 74, passing: 84, dribbling: 79, defense: 82, },
+  { name: 'William Saliba', club: 'Arsenal', nation: '🇫🇷', position: 'CB', pace: 82, shooting: 42, passing: 76, dribbling: 70, defense: 88, },
+  { name: 'Gabriel', club: 'Arsenal', nation: '🇧🇷', position: 'CB', pace: 74, shooting: 42, passing: 70, dribbling: 62, defense: 89, },
+  { name: 'Martín Zubimendi', club: 'Arsenal', nation: '🇪🇸', position: 'CDM', pace: 66, shooting: 70, passing: 87, dribbling: 80, defense: 85, },
+  { name: 'Viktor Gyökeres', club: 'Arsenal', nation: '🇸🇪', position: 'ST', pace: 83, shooting: 75, passing: 66, dribbling: 79, defense: 60, },
+  { name: 'Cristhian Mosquera', club: 'Arsenal', nation: '🇪🇸', position: 'CB', pace: 61, shooting: 40, passing: 63, dribbling: 54, defense: 67, },
+  { name: 'Myles Lewis-Skelly', club: 'Arsenal', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CDM', pace: 55, shooting: 56, passing: 70, dribbling: 60, defense: 68, },
+  { name: 'Max Dowman', club: 'Arsenal', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'RW', pace: 65, shooting: 51, passing: 50, dribbling: 57, defense: 38, },
+  { name: 'Florian Wirtz', club: 'Liverpool', nation: '🇩🇪', position: 'CAM', pace: 80, shooting: 84, passing: 91, dribbling: 90, defense: 50, },
+  { name: 'Alexander Isak', club: 'Liverpool', nation: '🇸🇪', position: 'ST', pace: 87, shooting: 90, passing: 79, dribbling: 85, defense: 38, },
+  { name: 'Virgil van Dijk', club: 'Liverpool', nation: '🇳🇱', position: 'CB', pace: 81, shooting: 59, passing: 84, dribbling: 75, defense: 91, },
+  { name: 'Dominik Szoboszlai', club: 'Liverpool', nation: '🇭🇺', position: 'CAM', pace: 77, shooting: 81, passing: 76, dribbling: 83, defense: 62, },
+  { name: 'Alexis Mac Allister', club: 'Liverpool', nation: '🇦🇷', position: 'CM', pace: 70, shooting: 78, passing: 86, dribbling: 82, defense: 70, },
+  { name: 'Hugo Ekitiké', club: 'Liverpool', nation: '🇫🇷', position: 'ST', pace: 73, shooting: 73, passing: 64, dribbling: 76, defense: 60, },
+  { name: 'Conor Bradley', club: 'Liverpool', nation: '🇬🇧', position: 'RB', pace: 66, shooting: 47, passing: 65, dribbling: 65, defense: 75, },
+  { name: 'Rio Ngumoha', club: 'Liverpool', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'LW', pace: 66, shooting: 59, passing: 57, dribbling: 62, defense: 42, },
+  { name: 'Trey Nyoni', club: 'Liverpool', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CM', pace: 53, shooting: 48, passing: 59, dribbling: 61, defense: 55, },
+  { name: 'Cole Palmer', club: 'Chelsea', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CAM', pace: 78, shooting: 86, passing: 86, dribbling: 88, defense: 42, },
+  { name: 'Moisés Caicedo', club: 'Chelsea', nation: '🇪🇨', position: 'CDM', pace: 70, shooting: 68, passing: 83, dribbling: 78, defense: 86, },
+  { name: 'Estêvão', club: 'Chelsea', nation: '🇧🇷', position: 'RW', pace: 86, shooting: 78, passing: 76, dribbling: 88, defense: 30, },
+  { name: 'Pedro Neto', club: 'Chelsea', nation: '🇵🇹', position: 'RW', pace: 78, shooting: 70, passing: 62, dribbling: 73, defense: 51, },
+  { name: 'Levi Colwill', club: 'Chelsea', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 70, shooting: 46, passing: 69, dribbling: 66, defense: 75, },
+  { name: 'Malo Gusto', club: 'Chelsea', nation: '🇫🇷', position: 'RB', pace: 61, shooting: 46, passing: 70, dribbling: 69, defense: 79, },
+  { name: 'Josh Acheampong', club: 'Chelsea', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 58, shooting: 41, passing: 67, dribbling: 53, defense: 67, },
+  { name: 'Aarón Anselmino', club: 'Chelsea', nation: '🇦🇷', position: 'CB', pace: 58, shooting: 34, passing: 59, dribbling: 55, defense: 62, },
+  { name: 'Bruno Fernandes', club: 'Manchester United', nation: '🇵🇹', position: 'CAM', pace: 74, shooting: 83, passing: 89, dribbling: 84, defense: 62, },
+  { name: 'Bryan Mbeumo', club: 'Manchester United', nation: '🇨🇲', position: 'RW', pace: 84, shooting: 82, passing: 79, dribbling: 82, defense: 40, },
+  { name: 'Matheus Cunha', club: 'Manchester United', nation: '🇧🇷', position: 'ST', pace: 80, shooting: 84, passing: 80, dribbling: 85, defense: 40, },
+  { name: 'Benjamin Sesko', club: 'Manchester United', nation: '🇸🇮', position: 'ST', pace: 77, shooting: 71, passing: 60, dribbling: 68, defense: 59, },
+  { name: 'Carlos Baleba', club: 'Manchester United', nation: '🇨🇲', position: 'CDM', pace: 65, shooting: 63, passing: 76, dribbling: 69, defense: 77, },
+  { name: 'Diogo Dalot', club: 'Manchester United', nation: '🇵🇹', position: 'RB', pace: 66, shooting: 46, passing: 69, dribbling: 65, defense: 79, },
+  { name: 'Kobbie Mainoo', club: 'Manchester United', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CM', pace: 64, shooting: 61, passing: 77, dribbling: 71, defense: 65, },
+  { name: 'Ayden Heaven', club: 'Manchester United', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 56, shooting: 35, passing: 58, dribbling: 53, defense: 64, },
+  { name: 'Harry Amass', club: 'Manchester United', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'LB', pace: 57, shooting: 39, passing: 56, dribbling: 56, defense: 65, },
+  { name: 'Mohammed Kudus', club: 'Tottenham', nation: '🇬🇭', position: 'RW', pace: 88, shooting: 76, passing: 76, dribbling: 88, defense: 40, },
+  { name: 'Xavi Simons', club: 'Tottenham', nation: '🇳🇱', position: 'CAM', pace: 82, shooting: 78, passing: 85, dribbling: 86, defense: 40, },
+  { name: 'Micky van de Ven', club: 'Tottenham', nation: '🇳🇱', position: 'CB', pace: 87, shooting: 40, passing: 70, dribbling: 66, defense: 85, },
+  { name: 'Pedro Porro', club: 'Tottenham', nation: '🇪🇸', position: 'RB', pace: 72, shooting: 49, passing: 76, dribbling: 69, defense: 77, },
+  { name: 'Dominic Solanke', club: 'Tottenham', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'ST', pace: 72, shooting: 66, passing: 62, dribbling: 67, defense: 49, },
+  { name: 'Lucas Bergvall', club: 'Tottenham', nation: '🇸🇪', position: 'CM', pace: 67, shooting: 67, passing: 74, dribbling: 71, defense: 66, },
+  { name: 'Destiny Udogie', club: 'Tottenham', nation: '🇮🇹', position: 'LB', pace: 63, shooting: 51, passing: 73, dribbling: 66, defense: 78, },
+  { name: 'Yoane Wissa', club: 'Newcastle', nation: '🇨🇩', position: 'ST', pace: 78, shooting: 77, passing: 71, dribbling: 79, defense: 62, },
+  { name: 'Sven Botman', club: 'Newcastle', nation: '🇳🇱', position: 'CB', pace: 72, shooting: 47, passing: 76, dribbling: 67, defense: 73, },
+  { name: 'Harvey Barnes', club: 'Newcastle', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'LW', pace: 78, shooting: 64, passing: 60, dribbling: 71, defense: 51, },
+  { name: 'Lewis Hall', club: 'Newcastle', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'LB', pace: 58, shooting: 45, passing: 67, dribbling: 63, defense: 73, },
+  { name: 'Lewis Miley', club: 'Newcastle', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CM', pace: 59, shooting: 58, passing: 63, dribbling: 65, defense: 59, },
+  { name: 'William Osula', club: 'Newcastle', nation: '🇩🇰', position: 'ST', pace: 64, shooting: 59, passing: 55, dribbling: 64, defense: 47, },
+  { name: 'Amadou Onana', club: 'Aston Villa', nation: '🇧🇪', position: 'CDM', pace: 68, shooting: 61, passing: 75, dribbling: 68, defense: 84, },
+  { name: 'John McGinn', club: 'Aston Villa', nation: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', position: 'CM', pace: 63, shooting: 56, passing: 68, dribbling: 70, defense: 59, },
+  { name: 'Pau Torres', club: 'Aston Villa', nation: '🇪🇸', position: 'CB', pace: 67, shooting: 45, passing: 76, dribbling: 63, defense: 76, },
+  { name: 'Emiliano Buendía', club: 'Aston Villa', nation: '🇦🇷', position: 'CAM', pace: 56, shooting: 62, passing: 66, dribbling: 68, defense: 48, },
+  { name: 'Ian Maatsen', club: 'Aston Villa', nation: '🇳🇱', position: 'LB', pace: 71, shooting: 45, passing: 67, dribbling: 69, defense: 74, },
+  { name: 'Matty Cash', club: 'Aston Villa', nation: '🇵🇱', position: 'RB', pace: 62, shooting: 46, passing: 65, dribbling: 63, defense: 70, },
+  { name: 'Lamare Bogarde', club: 'Aston Villa', nation: '🇳🇱', position: 'CDM', pace: 56, shooting: 49, passing: 64, dribbling: 56, defense: 65, },
+  { name: 'Kaoru Mitoma', club: 'Brighton', nation: '🇯🇵', position: 'LW', pace: 82, shooting: 70, passing: 69, dribbling: 83, defense: 59, },
+  { name: 'Yankuba Minteh', club: 'Brighton', nation: '🇬🇲', position: 'RW', pace: 82, shooting: 68, passing: 67, dribbling: 68, defense: 52, },
+  { name: 'Georginio Rutter', club: 'Brighton', nation: '🇫🇷', position: 'ST', pace: 64, shooting: 64, passing: 54, dribbling: 67, defense: 48, },
+  { name: 'Malick Yalcouyé', club: 'Brighton', nation: '🇨🇮', position: 'CM', pace: 55, shooting: 52, passing: 66, dribbling: 65, defense: 61, },
+  { name: 'Charalampos Kostoulas', club: 'Brighton', nation: '🇬🇷', position: 'ST', pace: 62, shooting: 59, passing: 51, dribbling: 58, defense: 41, },
+  { name: 'Morgan Gibbs-White', club: 'Nottingham Forest', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CAM', pace: 73, shooting: 73, passing: 75, dribbling: 78, defense: 60, },
+  { name: 'Nikola Milenković', club: 'Nottingham Forest', nation: '🇷🇸', position: 'CB', pace: 66, shooting: 49, passing: 69, dribbling: 64, defense: 77, },
+  { name: 'Daniel Muñoz', club: 'Nottingham Forest', nation: '🇨🇴', position: 'RB', pace: 73, shooting: 46, passing: 69, dribbling: 66, defense: 75, },
+  { name: 'Dan Ndoye', club: 'Nottingham Forest', nation: '🇨🇭', position: 'RW', pace: 75, shooting: 63, passing: 59, dribbling: 59, defense: 48, },
+  { name: 'Chris Wood', club: 'Nottingham Forest', nation: '🇳🇿', position: 'ST', pace: 66, shooting: 63, passing: 56, dribbling: 67, defense: 47, },
+  { name: 'Nicolò Savona', club: 'Nottingham Forest', nation: '🇮🇹', position: 'RB', pace: 59, shooting: 40, passing: 64, dribbling: 64, defense: 72, },
+  { name: 'Kevin Schade', club: 'Brentford', nation: '🇩🇪', position: 'LW', pace: 75, shooting: 68, passing: 62, dribbling: 71, defense: 49, },
+  { name: 'Dango Ouattara', club: 'Brentford', nation: '🇧🇫', position: 'RW', pace: 72, shooting: 63, passing: 60, dribbling: 62, defense: 44, },
+  { name: 'Nathan Collins', club: 'Brentford', nation: '🇮🇪', position: 'CB', pace: 64, shooting: 41, passing: 67, dribbling: 59, defense: 65, },
+  { name: 'Adam Wharton', club: 'Crystal Palace', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CDM', pace: 63, shooting: 63, passing: 74, dribbling: 65, defense: 78, },
+  { name: 'Jean-Philippe Mateta', club: 'Crystal Palace', nation: '🇫🇷', position: 'ST', pace: 73, shooting: 69, passing: 62, dribbling: 73, defense: 55, },
+  { name: 'Ismaïla Sarr', club: 'Crystal Palace', nation: '🇸🇳', position: 'RW', pace: 69, shooting: 62, passing: 56, dribbling: 68, defense: 44, },
+  { name: 'Justin Kluivert', club: 'Bournemouth', nation: '🇳🇱', position: 'CAM', pace: 62, shooting: 65, passing: 66, dribbling: 73, defense: 49, },
+  { name: 'Evanilson', club: 'Bournemouth', nation: '🇧🇷', position: 'ST', pace: 68, shooting: 64, passing: 59, dribbling: 61, defense: 51, },
+  { name: 'Junior Kroupi', club: 'Bournemouth', nation: '🇫🇷', position: 'ST', pace: 64, shooting: 62, passing: 57, dribbling: 62, defense: 44, },
+  { name: 'Tyler Adams', club: 'Bournemouth', nation: '🇺🇸', position: 'CDM', pace: 59, shooting: 55, passing: 66, dribbling: 57, defense: 69, },
+  { name: 'Ethan Ampadu', club: 'Leeds', nation: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', position: 'CDM', pace: 55, shooting: 50, passing: 65, dribbling: 59, defense: 72, },
+  { name: 'Ao Tanaka', club: 'Leeds', nation: '🇯🇵', position: 'CM', pace: 61, shooting: 56, passing: 67, dribbling: 65, defense: 64, },
+  { name: 'Dominic Calvert-Lewin', club: 'Leeds', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'ST', pace: 66, shooting: 66, passing: 58, dribbling: 62, defense: 50, },
+  { name: 'Granit Xhaka', club: 'Sunderland', nation: '🇨🇭', position: 'CDM', pace: 56, shooting: 58, passing: 74, dribbling: 65, defense: 74, },
+  { name: 'Enzo Le Fée', club: 'Sunderland', nation: '🇫🇷', position: 'CM', pace: 60, shooting: 56, passing: 66, dribbling: 67, defense: 64, },
+  { name: 'Noah Sadiki', club: 'Sunderland', nation: '🇨🇩', position: 'CM', pace: 59, shooting: 55, passing: 67, dribbling: 63, defense: 60, },
+  { name: 'Alex Iwobi', club: 'Fulham', nation: '🇳🇬', position: 'CDM', pace: 56, shooting: 52, passing: 70, dribbling: 64, defense: 67, },
+  { name: 'Joachim Andersen', club: 'Fulham', nation: '🇩🇰', position: 'CB', pace: 63, shooting: 42, passing: 68, dribbling: 58, defense: 65, },
+  { name: 'Rodrigo Muniz', club: 'Fulham', nation: '🇧🇷', position: 'ST', pace: 67, shooting: 64, passing: 54, dribbling: 63, defense: 47, },
+  { name: 'Jack Grealish', club: 'Everton', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'LW', pace: 81, shooting: 64, passing: 62, dribbling: 74, defense: 53, },
+  { name: 'Jarrad Branthwaite', club: 'Everton', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 66, shooting: 44, passing: 69, dribbling: 65, defense: 75, },
+  { name: 'Tyler Dibling', club: 'Everton', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'RW', pace: 67, shooting: 57, passing: 54, dribbling: 68, defense: 40, },
+  { name: 'Harrison Armstrong', club: 'Everton', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CM', pace: 52, shooting: 49, passing: 65, dribbling: 64, defense: 53, },
+  { name: 'Julio Enciso', club: 'Ipswich', nation: '🇵🇾', position: 'CAM', pace: 61, shooting: 66, passing: 60, dribbling: 69, defense: 49, },
+  { name: 'Jack Clarke', club: 'Ipswich', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'LW', pace: 71, shooting: 62, passing: 60, dribbling: 61, defense: 41, },
+  { name: 'Sindre Walle Egeli', club: 'Ipswich', nation: '🇳🇴', position: 'RW', pace: 70, shooting: 61, passing: 57, dribbling: 64, defense: 41, },
+  { name: 'Jack Rudoni', club: 'Coventry', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CAM', pace: 59, shooting: 62, passing: 62, dribbling: 68, defense: 47, },
+  { name: 'Haji Wright', club: 'Coventry', nation: '🇺🇸', position: 'ST', pace: 64, shooting: 63, passing: 52, dribbling: 66, defense: 50, },
+  { name: 'Tatsuhiro Sakamoto', club: 'Coventry', nation: '🇯🇵', position: 'RW', pace: 72, shooting: 55, passing: 58, dribbling: 63, defense: 40, },
+  { name: 'Mohamed Belloumi', club: 'Hull', nation: '🇩🇿', position: 'RW', pace: 68, shooting: 58, passing: 58, dribbling: 64, defense: 40, },
+  { name: 'Oli McBurnie', club: 'Hull', nation: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', position: 'ST', pace: 60, shooting: 60, passing: 54, dribbling: 62, defense: 48, },
+  { name: 'Joe Gelhardt', club: 'Hull', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'ST', pace: 64, shooting: 62, passing: 52, dribbling: 58, defense: 47, },
+  { name: 'Milos Kerkez', club: 'Liverpool', nation: '🇭🇺', position: 'LB', pace: 63, shooting: 53, passing: 73, dribbling: 73, defense: 81, },
+  { name: 'Jurriën Timber', club: 'Arsenal', nation: '🇳🇱', position: 'RB', pace: 66, shooting: 52, passing: 73, dribbling: 73, defense: 81, },
+  { name: 'Alejandro Balde', club: 'Barcelona', nation: '🇪🇸', position: 'LB', pace: 65, shooting: 50, passing: 70, dribbling: 73, defense: 81, },
+  { name: 'Álvaro Carreras', club: 'Real Madrid', nation: '🇪🇸', position: 'LB', pace: 68, shooting: 49, passing: 74, dribbling: 68, defense: 82, },
+  { name: 'Rayan Aït-Nouri', club: 'Manchester City', nation: '🇩🇿', position: 'LB', pace: 67, shooting: 49, passing: 74, dribbling: 68, defense: 80, },
+  { name: 'Pervis Estupiñán', club: 'AC Milan', nation: '🇪🇨', position: 'LB', pace: 66, shooting: 46, passing: 69, dribbling: 67, defense: 78, },
+  { name: 'Maximilian Mittelstädt', club: 'Stuttgart', nation: '🇩🇪', position: 'LB', pace: 64, shooting: 44, passing: 65, dribbling: 65, defense: 78, },
+  { name: 'Marcos Llorente', club: 'Atlético Madrid', nation: '🇪🇸', position: 'RB', pace: 72, shooting: 47, passing: 71, dribbling: 67, defense: 78, },
+  { name: 'Antonee Robinson', club: 'Fulham', nation: '🇺🇸', position: 'LB', pace: 66, shooting: 45, passing: 67, dribbling: 69, defense: 76, },
+  { name: 'Kylian Mbappé', club: 'Real Madrid', nation: '🇫🇷', position: 'ST', pace: 96, shooting: 90, passing: 80, dribbling: 92, defense: 36, },
+  { name: 'Vinicius Junior', club: 'Real Madrid', nation: '🇧🇷', position: 'LW', pace: 94, shooting: 85, passing: 80, dribbling: 94, defense: 36, },
+  { name: 'Jude Bellingham', club: 'Real Madrid', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CAM', pace: 80, shooting: 86, passing: 86, dribbling: 88, defense: 68, },
+  { name: 'Federico Valverde', club: 'Real Madrid', nation: '🇺🇾', position: 'CM', pace: 84, shooting: 84, passing: 89, dribbling: 84, defense: 80, },
+  { name: 'Trent Alexander-Arnold', club: 'Real Madrid', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'RB', pace: 75, shooting: 61, passing: 78, dribbling: 81, defense: 86, },
+  { name: 'Aurélien Tchouaméni', club: 'Real Madrid', nation: '🇫🇷', position: 'CDM', pace: 74, shooting: 68, passing: 82, dribbling: 76, defense: 85, },
+  { name: 'Arda Güler', club: 'Real Madrid', nation: '🇹🇷', position: 'CAM', pace: 70, shooting: 80, passing: 87, dribbling: 85, defense: 42, },
+  { name: 'Raúl Asencio', club: 'Real Madrid', nation: '🇪🇸', position: 'CB', pace: 64, shooting: 40, passing: 69, dribbling: 57, defense: 72, },
+  { name: 'Lamine Yamal', club: 'Barcelona', nation: '🇪🇸', position: 'RW', pace: 88, shooting: 86, passing: 88, dribbling: 95, defense: 32, },
+  { name: 'Rodri', club: 'Barcelona', nation: '🇪🇸', position: 'CDM', pace: 62, shooting: 78, passing: 92, dribbling: 84, defense: 93, },
+  { name: 'Pedri', club: 'Barcelona', nation: '🇪🇸', position: 'CM', pace: 78, shooting: 84, passing: 96, dribbling: 94, defense: 72, },
+  { name: 'Raphinha', club: 'Barcelona', nation: '🇧🇷', position: 'ST', pace: 87, shooting: 89, passing: 85, dribbling: 88, defense: 42, },
+  { name: 'Pau Cubarsí', club: 'Barcelona', nation: '🇪🇸', position: 'CB', pace: 75, shooting: 54, passing: 77, dribbling: 67, defense: 81, },
+  { name: 'Frenkie de Jong', club: 'Barcelona', nation: '🇳🇱', position: 'CM', pace: 72, shooting: 69, passing: 80, dribbling: 78, defense: 73, },
+  { name: 'Julián Alvarez', club: 'Atlético Madrid', nation: '🇦🇷', position: 'ST', pace: 82, shooting: 87, passing: 78, dribbling: 85, defense: 44, },
+  { name: 'Álex Baena', club: 'Atlético Madrid', nation: '🇪🇸', position: 'LW', pace: 83, shooting: 72, passing: 69, dribbling: 85, defense: 57, },
+  { name: 'Pablo Barrios', club: 'Atlético Madrid', nation: '🇪🇸', position: 'CM', pace: 64, shooting: 64, passing: 72, dribbling: 73, defense: 68, },
+  { name: 'Nicolas Pépé', club: 'Villarreal', nation: '🇨🇮', position: 'RW', pace: 73, shooting: 63, passing: 64, dribbling: 68, defense: 49, },
+  { name: 'Gerard Moreno', club: 'Villarreal', nation: '🇪🇸', position: 'ST', pace: 66, shooting: 69, passing: 60, dribbling: 65, defense: 50, },
+  { name: 'Alberto Moleiro', club: 'Villarreal', nation: '🇪🇸', position: 'LW', pace: 71, shooting: 62, passing: 57, dribbling: 68, defense: 45, },
+  { name: 'Nico Williams', club: 'Athletic Bilbao', nation: '🇪🇸', position: 'LW', pace: 89, shooting: 78, passing: 77, dribbling: 76, defense: 64, },
+  { name: 'Oihan Sancet', club: 'Athletic Bilbao', nation: '🇪🇸', position: 'CAM', pace: 65, shooting: 69, passing: 75, dribbling: 74, defense: 60, },
+  { name: 'Iñaki Williams', club: 'Athletic Bilbao', nation: '🇬🇭', position: 'ST', pace: 69, shooting: 68, passing: 62, dribbling: 68, defense: 52, },
+  { name: 'Antony', club: 'Betis', nation: '🇧🇷', position: 'RW', pace: 77, shooting: 62, passing: 62, dribbling: 72, defense: 53, },
+  { name: 'Isco', club: 'Betis', nation: '🇪🇸', position: 'CAM', pace: 63, shooting: 69, passing: 68, dribbling: 73, defense: 57, },
+  { name: 'Takefusa Kubo', club: 'Real Sociedad', nation: '🇯🇵', position: 'RW', pace: 84, shooting: 80, passing: 83, dribbling: 87, defense: 42, },
+  { name: 'Mikel Oyarzabal', club: 'Real Sociedad', nation: '🇪🇸', position: 'ST', pace: 80, shooting: 74, passing: 66, dribbling: 74, defense: 62, },
+  { name: 'Lucas Stassin', club: 'Sevilla', nation: '🇧🇪', position: 'ST', pace: 67, shooting: 62, passing: 58, dribbling: 63, defense: 47, },
+  { name: 'Borja Iglesias', club: 'Celta Vigo', nation: '🇪🇸', position: 'ST', pace: 59, shooting: 66, passing: 57, dribbling: 60, defense: 50, },
+  { name: 'Sergio Camello', club: 'Rayo Vallecano', nation: '🇪🇸', position: 'ST', pace: 64, shooting: 63, passing: 54, dribbling: 65, defense: 45, },
+  { name: 'Lautaro Martínez', club: 'Inter', nation: '🇦🇷', position: 'ST', pace: 84, shooting: 91, passing: 80, dribbling: 86, defense: 46, },
+  { name: 'Nicolò Barella', club: 'Inter', nation: '🇮🇹', position: 'CM', pace: 79, shooting: 79, passing: 91, dribbling: 84, defense: 79, },
+  { name: 'Alessandro Bastoni', club: 'Inter', nation: '🇮🇹', position: 'CB', pace: 76, shooting: 44, passing: 82, dribbling: 72, defense: 87, },
+  { name: 'Marcus Thuram', club: 'Inter', nation: '🇫🇷', position: 'ST', pace: 84, shooting: 83, passing: 74, dribbling: 80, defense: 40, },
+  { name: 'Hakan Çalhanoğlu', club: 'Inter', nation: '🇹🇷', position: 'CDM', pace: 62, shooting: 78, passing: 90, dribbling: 80, defense: 70, },
+  { name: 'Kenan Yıldız', club: 'Juventus', nation: '🇹🇷', position: 'LW', pace: 80, shooting: 80, passing: 83, dribbling: 88, defense: 38, },
+  { name: 'Bremer', club: 'Juventus', nation: '🇧🇷', position: 'CB', pace: 73, shooting: 49, passing: 73, dribbling: 67, defense: 80, },
+  { name: 'Manuel Locatelli', club: 'Juventus', nation: '🇮🇹', position: 'CDM', pace: 61, shooting: 58, passing: 76, dribbling: 65, defense: 76, },
+  { name: 'Francisco Conceição', club: 'Juventus', nation: '🇵🇹', position: 'RW', pace: 81, shooting: 65, passing: 65, dribbling: 72, defense: 49, },
+  { name: 'Luka Modrić', club: 'AC Milan', nation: '🇭🇷', position: 'CM', pace: 60, shooting: 74, passing: 92, dribbling: 88, defense: 58, },
+  { name: 'Christian Pulisic', club: 'AC Milan', nation: '🇺🇸', position: 'RW', pace: 85, shooting: 80, passing: 80, dribbling: 85, defense: 38, },
+  { name: 'Adrien Rabiot', club: 'AC Milan', nation: '🇫🇷', position: 'CM', pace: 74, shooting: 74, passing: 84, dribbling: 80, defense: 74, },
+  { name: 'Fikayo Tomori', club: 'AC Milan', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 67, shooting: 49, passing: 71, dribbling: 65, defense: 75, },
+  { name: 'Kevin De Bruyne', club: 'Napoli', nation: '🇧🇪', position: 'CAM', pace: 66, shooting: 85, passing: 92, dribbling: 83, defense: 50, },
+  { name: 'Scott McTominay', club: 'Napoli', nation: '🏴󠁧󠁢󠁳󠁣󠁴󠁿', position: 'CM', pace: 74, shooting: 82, passing: 79, dribbling: 80, defense: 74, },
+  { name: 'David Neres', club: 'Napoli', nation: '🇧🇷', position: 'RW', pace: 86, shooting: 78, passing: 79, dribbling: 86, defense: 38, },
+  { name: 'Giovanni Di Lorenzo', club: 'Napoli', nation: '🇮🇹', position: 'RB', pace: 69, shooting: 50, passing: 71, dribbling: 69, defense: 82, },
+  { name: 'Alessandro Buongiorno', club: 'Napoli', nation: '🇮🇹', position: 'CB', pace: 68, shooting: 48, passing: 72, dribbling: 66, defense: 74, },
+  { name: 'Charles De Ketelaere', club: 'Atalanta', nation: '🇧🇪', position: 'CAM', pace: 70, shooting: 75, passing: 76, dribbling: 77, defense: 57, },
+  { name: 'Éderson', club: 'Atalanta', nation: '🇧🇷', position: 'CM', pace: 65, shooting: 65, passing: 73, dribbling: 73, defense: 71, },
+  { name: 'Paulo Dybala', club: 'Roma', nation: '🇦🇷', position: 'CF', pace: 81, shooting: 71, passing: 71, dribbling: 78, defense: 58, },
+  { name: 'Manu Koné', club: 'Roma', nation: '🇫🇷', position: 'CM', pace: 67, shooting: 62, passing: 75, dribbling: 74, defense: 68, },
+  { name: 'Nico Paz', club: 'Como', nation: '🇦🇷', position: 'CAM', pace: 65, shooting: 72, passing: 66, dribbling: 79, defense: 56, },
+  { name: 'Martin Baturina', club: 'Como', nation: '🇭🇷', position: 'CAM', pace: 60, shooting: 70, passing: 64, dribbling: 76, defense: 52, },
+  { name: 'Mattia Zaccagni', club: 'Lazio', nation: '🇮🇹', position: 'LW', pace: 83, shooting: 70, passing: 63, dribbling: 71, defense: 50, },
+  { name: 'Riccardo Orsolini', club: 'Bologna', nation: '🇮🇹', position: 'RW', pace: 78, shooting: 64, passing: 66, dribbling: 75, defense: 50, },
+  { name: 'Yerry Mina', club: 'Cagliari', nation: '🇨🇴', position: 'CB', pace: 61, shooting: 41, passing: 62, dribbling: 54, defense: 68, },
+  { name: 'Harry Kane', club: 'Bayern Munich', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'ST', pace: 68, shooting: 95, passing: 88, dribbling: 85, defense: 48, },
+  { name: 'Jamal Musiala', club: 'Bayern Munich', nation: '🇩🇪', position: 'CAM', pace: 82, shooting: 79, passing: 84, dribbling: 88, defense: 44, },
+  { name: 'Michael Olise', club: 'Bayern Munich', nation: '🇫🇷', position: 'RW', pace: 82, shooting: 83, passing: 84, dribbling: 85, defense: 44, },
+  { name: 'Luis Díaz', club: 'Bayern Munich', nation: '🇨🇴', position: 'LW', pace: 88, shooting: 81, passing: 78, dribbling: 89, defense: 36, },
+  { name: 'Joshua Kimmich', club: 'Bayern Munich', nation: '🇩🇪', position: 'CDM', pace: 68, shooting: 76, passing: 90, dribbling: 80, defense: 84, },
+  { name: 'Serhou Guirassy', club: 'Dortmund', nation: '🇬🇳', position: 'ST', pace: 80, shooting: 77, passing: 67, dribbling: 77, defense: 65, },
+  { name: 'Nico Schlotterbeck', club: 'Dortmund', nation: '🇩🇪', position: 'CB', pace: 71, shooting: 47, passing: 73, dribbling: 67, defense: 81, },
+  { name: 'Maximilian Beier', club: 'Dortmund', nation: '🇩🇪', position: 'ST', pace: 67, shooting: 64, passing: 53, dribbling: 65, defense: 50, },
+  { name: 'Patrik Schick', club: 'Leverkusen', nation: '🇨🇿', position: 'ST', pace: 73, shooting: 70, passing: 66, dribbling: 74, defense: 55, },
+  { name: 'Edmond Tapsoba', club: 'Leverkusen', nation: '🇧🇫', position: 'CB', pace: 70, shooting: 43, passing: 74, dribbling: 66, defense: 73, },
+  { name: 'Jarell Quansah', club: 'Leverkusen', nation: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', position: 'CB', pace: 63, shooting: 41, passing: 70, dribbling: 64, defense: 74, },
+  { name: 'David Raum', club: 'Leipzig', nation: '🇩🇪', position: 'LB', pace: 70, shooting: 52, passing: 76, dribbling: 68, defense: 78, },
+  { name: 'Antonio Nusa', club: 'Leipzig', nation: '🇳🇴', position: 'LW', pace: 76, shooting: 67, passing: 66, dribbling: 68, defense: 50, },
+  { name: 'Jonathan Burkardt', club: 'Frankfurt', nation: '🇩🇪', position: 'ST', pace: 75, shooting: 72, passing: 61, dribbling: 68, defense: 54, },
+  { name: 'Ritsu Doan', club: 'Frankfurt', nation: '🇯🇵', position: 'RW', pace: 76, shooting: 62, passing: 62, dribbling: 73, defense: 51, },
+  { name: 'Deniz Undav', club: 'Stuttgart', nation: '🇩🇪', position: 'ST', pace: 66, shooting: 65, passing: 54, dribbling: 62, defense: 48, },
+  { name: 'Vincenzo Grifo', club: 'Freiburg', nation: '🇮🇹', position: 'LW', pace: 73, shooting: 68, passing: 66, dribbling: 70, defense: 50, },
+  { name: 'Tim Kleindienst', club: 'Gladbach', nation: '🇩🇪', position: 'ST', pace: 71, shooting: 65, passing: 55, dribbling: 62, defense: 49, },
+  { name: 'Khvicha Kvaratskhelia', club: 'PSG', nation: '🇬🇪', position: 'LW', pace: 89, shooting: 84, passing: 86, dribbling: 92, defense: 38, },
+  { name: 'Ousmane Dembélé', club: 'PSG', nation: '🇫🇷', position: 'ST', pace: 90, shooting: 86, passing: 82, dribbling: 92, defense: 36, },
+  { name: 'Vitinha', club: 'PSG', nation: '🇵🇹', position: 'CDM', pace: 70, shooting: 76, passing: 91, dribbling: 86, defense: 80, },
+  { name: 'Achraf Hakimi', club: 'PSG', nation: '🇲🇦', position: 'RB', pace: 92, shooting: 62, passing: 80, dribbling: 84, defense: 78, },
+  { name: 'João Neves', club: 'PSG', nation: '🇵🇹', position: 'CM', pace: 72, shooting: 74, passing: 87, dribbling: 84, defense: 68, },
+  { name: 'Désiré Doué', club: 'PSG', nation: '🇫🇷', position: 'RW', pace: 84, shooting: 78, passing: 79, dribbling: 87, defense: 36, },
+  { name: 'Amine Gouiri', club: 'Marseille', nation: '🇩🇿', position: 'ST', pace: 75, shooting: 69, passing: 65, dribbling: 72, defense: 59, },
+  { name: 'Igor Paixão', club: 'Marseille', nation: '🇧🇷', position: 'LW', pace: 74, shooting: 66, passing: 65, dribbling: 71, defense: 50, },
+  { name: 'Mika Biereth', club: 'Monaco', nation: '🇩🇰', position: 'ST', pace: 76, shooting: 69, passing: 64, dribbling: 74, defense: 54, },
+  { name: 'Folarin Balogun', club: 'Monaco', nation: '🇺🇸', position: 'ST', pace: 69, shooting: 67, passing: 62, dribbling: 66, defense: 50, },
+  { name: 'Loïs Openda', club: 'Lyon', nation: '🇧🇪', position: 'ST', pace: 77, shooting: 70, passing: 64, dribbling: 74, defense: 56, },
+  { name: 'Olivier Giroud', club: 'Lille', nation: '🇫🇷', position: 'ST', pace: 59, shooting: 65, passing: 52, dribbling: 62, defense: 46, },
+  { name: 'Florian Thauvin', club: 'Lens', nation: '🇫🇷', position: 'RW', pace: 74, shooting: 62, passing: 64, dribbling: 74, defense: 50, },
+];
+
+// Position-weighted overall (FUT-style); weights per position sum to 1.
+const OVR_WEIGHTS = {
+  ST: { shooting: 0.50, pace: 0.22, dribbling: 0.16, passing: 0.08, defense: 0.04 },
+  CF: { shooting: 0.38, pace: 0.20, dribbling: 0.24, passing: 0.14, defense: 0.04 },
+  LW: { pace: 0.26, dribbling: 0.30, shooting: 0.20, passing: 0.18, defense: 0.06 },
+  RW: { pace: 0.26, dribbling: 0.30, shooting: 0.20, passing: 0.18, defense: 0.06 },
+  CAM: { passing: 0.32, dribbling: 0.28, shooting: 0.22, pace: 0.12, defense: 0.06 },
+  CM: { passing: 0.30, dribbling: 0.24, shooting: 0.16, pace: 0.14, defense: 0.16 },
+  CDM: { defense: 0.32, passing: 0.28, dribbling: 0.16, pace: 0.12, shooting: 0.12 },
+  CB: { defense: 0.46, pace: 0.20, passing: 0.18, dribbling: 0.10, shooting: 0.06 },
+  LB: { defense: 0.30, pace: 0.30, passing: 0.16, dribbling: 0.14, shooting: 0.10 },
+  RB: { defense: 0.30, pace: 0.30, passing: 0.16, dribbling: 0.14, shooting: 0.10 }
+};
+
+function deriveOverall(stats, position) {
+  const weights = OVR_WEIGHTS[position];
+  let sum = 0;
+  for (const [stat, weight] of Object.entries(weights)) sum += weight * stats[stat];
+  return Math.round(sum);
+}
+
+function rarityForOverall(overall) {
+  if (overall >= 85) return 'legendary';
+  if (overall >= 75) return 'epic';
+  if (overall >= 65) return 'rare';
+  return 'common';
+}
+
+// Piecewise-linear monotonic price through the legacy rarity price bands:
+// common 50-64 -> 1,000-15,000 | rare 65-74 -> 15,000-80,000 | epic 75-84 -> 80,000-500,000 | legendary 85-99 -> 500,000-2,000,000.
+function basePriceFor(overall) {
+  const band = (lo, hi, priceLo, priceHi) =>
+    Math.round(priceLo + (priceHi - priceLo) * (overall - lo) / (hi - lo));
+  if (overall >= 85) return band(85, 99, 500000, 2000000);
+  if (overall >= 75) return band(75, 84, 80000, 500000);
+  if (overall >= 65) return band(65, 74, 15000, 80000);
+  return band(50, 64, 1000, 15000);
+}
+
+function templateEmoji(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash + name.charCodeAt(i) * 31) | 0;
+  return PLAYER_EMOJIS[Math.abs(hash) % PLAYER_EMOJIS.length];
+}
+
+const TEMPLATES = PLAYER_TEMPLATES.map((t) => {
+  const overall = deriveOverall(t, t.position);
+  return {
+    ...t,
+    overall,
+    rarity: rarityForOverall(overall),
+    basePrice: basePriceFor(overall),
+    emoji: templateEmoji(t.name)
+  };
+});
+
+// Shuffled deal decks per rarity tier: consecutive draws cover the whole tier
+// before repeating, so generated batches stay varied.
+const templateDecks = {};
+function shuffleTemplates(list) {
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+function pickTemplate(rarity) {
+  let deck = templateDecks[rarity];
+  if (!deck || deck.index >= deck.list.length) {
+    deck = templateDecks[rarity] = { list: shuffleTemplates(TEMPLATES.filter((t) => t.rarity === rarity)), index: 0 };
+  }
+  const template = deck.list[deck.index++];
+  if (template) return template;
+  return TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
+}
+
 function generatePlayer(id, rarityOverride) {
   const rarityRoll = Math.random();
   let rarity = rarityOverride;
@@ -140,41 +434,21 @@ function generatePlayer(id, rarityOverride) {
     else rarity = 'common';
   }
 
-  const baseStats = {
-    legendary: { min: 85, max: 99 },
-    epic: { min: 75, max: 88 },
-    rare: { min: 65, max: 78 },
-    common: { min: 50, max: 68 }
-  }[rarity];
-
-  const r = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const pace = r(baseStats.min, baseStats.max);
-  const shooting = r(baseStats.min, baseStats.max);
-  const passing = r(baseStats.min, baseStats.max);
-  const dribbling = r(baseStats.min, baseStats.max);
-  const defense = r(baseStats.min, baseStats.max);
-  const overall = Math.round((pace + shooting + passing + dribbling + defense) / 5);
-
-  const basePrice = {
-    legendary: r(500000, 2000000),
-    epic: r(80000, 500000),
-    rare: r(15000, 80000),
-    common: r(1000, 15000)
-  }[rarity];
+  const t = pickTemplate(rarity);
 
   return {
     id,
-    name: randName(),
-    club: CLUBS[Math.floor(Math.random() * CLUBS.length)],
-    nation: NATIONS[Math.floor(Math.random() * NATIONS.length)],
-    position: POSITIONS[Math.floor(Math.random() * POSITIONS.length)],
-    emoji: PLAYER_EMOJIS[Math.floor(Math.random() * PLAYER_EMOJIS.length)],
-    rarity,
-    overall,
-    pace, shooting, passing, dribbling, defense,
-    basePrice,
-    currentPrice: basePrice,
-    priceHistory: [basePrice],
+    name: t.name,
+    club: t.club,
+    nation: t.nation,
+    position: t.position,
+    emoji: t.emoji,
+    rarity: t.rarity,
+    overall: t.overall,
+    pace: t.pace, shooting: t.shooting, passing: t.passing, dribbling: t.dribbling, defense: t.defense,
+    basePrice: t.basePrice,
+    currentPrice: t.basePrice,
+    priceHistory: [t.basePrice],
     listed: false,
     listPrice: 0
   };
@@ -242,7 +516,7 @@ function normalizeCard(card) {
     name: typeof card.name === 'string' ? card.name : randName(),
     club: typeof card.club === 'string' ? card.club : CLUBS[0],
     nation: typeof card.nation === 'string' ? card.nation : NATIONS[0],
-    position: typeof card.position === 'string' ? card.position : POSITIONS[0],
+    position: typeof card.position === 'string' ? card.position : 'CM',
     emoji: typeof card.emoji === 'string' ? card.emoji : PLAYER_EMOJIS[0],
     rarity: ['legendary', 'epic', 'rare', 'common'].includes(card.rarity) ? card.rarity : 'common',
     overall: Number.isFinite(card.overall) ? Math.round(card.overall) : 50,
@@ -1262,6 +1536,39 @@ function init() {
   } else {
     showToast('🎉 Welcome to FutCard! You start with 🪙1,000,000 coins!', 'success');
   }
+}
+
+// Test seam: game.test.js loads this file with stubbed browser globals and
+// captures internals through this hook. Inert in the browser (hook unset).
+if (typeof globalThis.__FUTCARD_TEST_HOOK__ === 'function') {
+  globalThis.__FUTCARD_TEST_HOOK__({
+    get state() { return state; },
+    generatePlayer,
+    generateMarket,
+    generateBots,
+    giveStarterCards,
+    openPack,
+    closePack,
+    buyCard,
+    loadState,
+    saveState,
+    buildSaveData,
+    normalizeCard,
+    weightedRarity,
+    PACK_CONFIG,
+    PLAYER_TEMPLATES,
+    TEMPLATES,
+    OVR_WEIGHTS,
+    deriveOverall,
+    rarityForOverall,
+    basePriceFor,
+    templateEmoji,
+    pickTemplate,
+    randName,
+    PLAYER_EMOJIS,
+    ROSTER_SEASON,
+    ROSTER_AS_OF
+  });
 }
 
 init();
