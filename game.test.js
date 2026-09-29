@@ -4,6 +4,18 @@ import { beforeAll, describe, expect, test } from 'bun:test';
 
 const APP_SOURCE = readFileSync(new URL('./src/app.js', import.meta.url), 'utf8');
 
+// Data modules are classic scripts loaded before app.js in the browser; the
+// sandbox mirrors that by evaluating them into the same VM context first.
+const DATA_SOURCES = ['reference', 'roster'].map((name) => ({
+  name,
+  source: readFileSync(new URL(`./src/data/${name}.js`, import.meta.url), 'utf8'),
+}));
+
+// Runtime-built emoji stand in for legacy stored data without putting hidden
+// Unicode literals in this test file.
+const LEGACY_NL_FLAG = String.fromCodePoint(0x1f1f3, 0x1f1f1);
+const LEGACY_BLACK_FLAG = String.fromCodePoint(0x1f3f4);
+
 const OUTFIELD_POSITIONS = new Set(['CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST', 'CF']);
 
 function fakeElement() {
@@ -104,6 +116,9 @@ function loadApp(storage) {
     sandbox.__futcardApi = api;
   };
   const context = vm.createContext(sandbox);
+  for (const { source } of DATA_SOURCES) {
+    vm.runInContext(source, context, { filename: 'data.js' });
+  }
   vm.runInContext(APP_SOURCE, context, { filename: 'app.js' });
   const api = sandbox.__futcardApi;
   if (!api) throw new Error('app.js did not register its test hook');
@@ -351,7 +366,7 @@ describe('save roundtrip', () => {
       id: 501,
       name: 'Legacy Keeper',
       club: 'Ajax',
-      nation: '🇳🇱',
+      nation: LEGACY_NL_FLAG,
       position: 'GK',
       emoji: '🧑',
       rarity: 'rare',
@@ -367,7 +382,7 @@ describe('save roundtrip', () => {
       id: 502,
       name: 'Jack Smith',
       club: 'West Ham',
-      nation: '🏴',
+      nation: LEGACY_BLACK_FLAG,
       position: 'ST',
       emoji: '👨',
       rarity: 'common',
@@ -445,5 +460,34 @@ describe('offline purity', () => {
     expect(APP_SOURCE).not.toMatch(/WebSocket|EventSource/);
     expect(APP_SOURCE).not.toMatch(/\bimport\s*\(/);
     expect(APP_SOURCE).not.toMatch(/https?:\/\//);
+  });
+});
+
+describe('source hygiene', () => {
+  test('shippable source files carry no flag glyphs or hidden/bidirectional Unicode', () => {
+    const files = [
+      'src/app.js',
+      'src/data/reference.js',
+      'src/data/roster.js',
+      'src/index.html',
+      'src/sw.js',
+      'game.test.js',
+    ];
+    const isHidden = (cp) =>
+      (cp >= 0x1f1e6 && cp <= 0x1f1ff) || // regional indicators (flag pairs)
+      (cp >= 0xe0000 && cp <= 0xe007f) || // tag characters (subdivision flags)
+      (cp >= 0xfe00 && cp <= 0xfe0f) || // variation selectors
+      (cp >= 0x200b && cp <= 0x200f) || // zero-width and bidi marks
+      (cp >= 0x202a && cp <= 0x202e) || // bidi overrides
+      (cp >= 0x2066 && cp <= 0x2069) || // bidi isolates
+      cp === 0x061c; // arabic letter mark
+    const violations = [];
+    for (const file of files) {
+      const text = readFileSync(new URL(`./${file}`, import.meta.url), 'utf8');
+      for (const ch of text) {
+        if (isHidden(ch.codePointAt(0))) violations.push(`${file}: U+${ch.codePointAt(0).toString(16).toUpperCase()}`);
+      }
+    }
+    expect(violations).toEqual([]);
   });
 });

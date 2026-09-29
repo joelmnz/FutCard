@@ -42,7 +42,7 @@ async function fingerprintFile(filePath: string, prefix: string) {
   const hash = createHash('sha256').update(content).digest('hex').slice(0, 8);
   const ext = filePath.includes('.') ? filePath.slice(filePath.lastIndexOf('.')) : '';
   const nextFileName = `${prefix}.${hash}${ext}`;
-  const nextPath = join(distDir, nextFileName);
+  const nextPath = join(distDir, dirname(filePath), nextFileName);
 
   await rename(sourcePath, nextPath);
   return nextFileName;
@@ -59,6 +59,8 @@ export async function buildStaticSite() {
   }
 
   const hashedAppFile = await fingerprintFile('app.js', 'app');
+  const hashedRosterFile = await fingerprintFile('data/roster.js', 'roster');
+  const hashedReferenceFile = await fingerprintFile('data/reference.js', 'reference');
   const hashedStyleFile = await fingerprintFile('site.css', 'site');
 
   const precacheUrls = [
@@ -69,6 +71,8 @@ export async function buildStaticSite() {
     './icons/icon-512.svg',
     './icons/maskable-icon.svg',
     `./${hashedAppFile}`,
+    `./data/${hashedRosterFile}`,
+    `./data/${hashedReferenceFile}`,
     `./${hashedStyleFile}`,
   ];
 
@@ -78,12 +82,14 @@ export async function buildStaticSite() {
     indexPath,
     indexHtml
       .replace('./site.css', `./${hashedStyleFile}`)
+      .replace('./data/reference.js', `./data/${hashedReferenceFile}`)
+      .replace('./data/roster.js', `./data/${hashedRosterFile}`)
       .replace('./app.js', `./${hashedAppFile}`),
   );
 
   const swPath = join(distDir, 'sw.js');
   const swTemplate = await readFile(swPath, 'utf8');
-  const buildVersion = `${hashedAppFile}:${hashedStyleFile}`;
+  const buildVersion = [hashedAppFile, hashedRosterFile, hashedReferenceFile, hashedStyleFile].join(':');
   await writeFile(
     swPath,
     swTemplate

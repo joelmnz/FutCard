@@ -27,11 +27,19 @@ describe('buildStaticSite', () => {
 
     await expect(fileExists(join(distDir, 'index.html'))).resolves.toBe(true);
     await expect(hasMatchingFile(distDir, /^app\.[a-f0-9]{8}\.js$/)).resolves.toBe(true);
+    await expect(hasMatchingFile(join(distDir, 'data'), /^roster\.[a-f0-9]{8}\.js$/)).resolves.toBe(true);
+    await expect(hasMatchingFile(join(distDir, 'data'), /^reference\.[a-f0-9]{8}\.js$/)).resolves.toBe(true);
     await expect(hasMatchingFile(distDir, /^site\.[a-f0-9]{8}\.css$/)).resolves.toBe(true);
     await expect(fileExists(join(distDir, 'manifest.webmanifest'))).resolves.toBe(true);
     await expect(fileExists(join(distDir, 'sw.js'))).resolves.toBe(true);
-    await expect(readFile(join(distDir, 'sw.js'), 'utf8')).resolves.not.toContain('__FUTCARD_SW_VERSION__');
-    await expect(readFile(join(distDir, 'sw.js'), 'utf8')).resolves.not.toContain('__FUTCARD_PRECACHE_URLS__');
+    const resolvedSw = await readFile(join(distDir, 'sw.js'), 'utf8');
+    await expect(resolvedSw).not.toContain('__FUTCARD_SW_VERSION__');
+    await expect(resolvedSw).not.toContain('__FUTCARD_PRECACHE_URLS__');
+    await expect(resolvedSw).toMatch(/data\/roster\.[a-f0-9]{8}\.js/);
+    await expect(resolvedSw).toMatch(/data\/reference\.[a-f0-9]{8}\.js/);
+    const resolvedIndex = await readFile(join(distDir, 'index.html'), 'utf8');
+    await expect(resolvedIndex).toMatch(/data\/roster\.[a-f0-9]{8}\.js/);
+    await expect(resolvedIndex).toMatch(/data\/reference\.[a-f0-9]{8}\.js/);
     await expect(fileExists(join(distDir, 'favicon.svg'))).resolves.toBe(true);
     await expect(fileExists(join(distDir, '.nojekyll'))).resolves.toBe(true);
   });

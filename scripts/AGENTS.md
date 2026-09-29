@@ -8,7 +8,7 @@ Produce the GitHub Pages artifact from `src/` and `public/`, keep placeholder ic
 
 ## Ownership
 
-- `build-static.ts` — build pipeline: cleans `dist/`, copies `src/` and `public/` (skipping `.md` files), fingerprints `app.js` → `app.<8-char-hash>.js` and `site.css` → `site.<8-char-hash>.css` (sha256 prefix), rewrites references in `dist/index.html`, resolves `dist/sw.js` placeholders, writes `.nojekyll`.
+- `build-static.ts` — build pipeline: cleans `dist/`, copies `src/` and `public/` (skipping `.md` files), fingerprints `app.js` → `app.<8-char-hash>.js`, `data/roster.js` → `data/roster.<8-char-hash>.js`, `data/reference.js` → `data/reference.<8-char-hash>.js`, and `site.css` → `site.<8-char-hash>.css` (sha256 prefix), rewrites references in `dist/index.html`, resolves `dist/sw.js` placeholders, writes `.nojekyll`.
 - `build-static.test.ts` — Bun test that runs the build and asserts the artifact shape.
 - `generate-icons.ts` — regenerates placeholder SVG icons into `public/` (`favicon.svg`, `icons/icon-192.svg`, `icons/icon-512.svg`, `icons/maskable-icon.svg`).
 
