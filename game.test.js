@@ -16,7 +16,7 @@ const DATA_SOURCES = ['reference', 'roster'].map((name) => ({
 const LEGACY_NL_FLAG = String.fromCodePoint(0x1f1f3, 0x1f1f1);
 const LEGACY_BLACK_FLAG = String.fromCodePoint(0x1f3f4);
 
-const OUTFIELD_POSITIONS = new Set(['CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST', 'CF']);
+const CARD_POSITIONS = new Set(['GK', 'CB', 'LB', 'RB', 'CDM', 'CM', 'CAM', 'LW', 'RW', 'ST', 'CF']);
 
 function fakeElement() {
   const el = {
@@ -139,7 +139,7 @@ beforeAll(() => {
 });
 
 describe('roster integrity', () => {
-  test('templates are complete, outfield-only and unique', () => {
+  test('templates are complete, include goalkeepers and are unique', () => {
     expect(api.TEMPLATES.length).toBeGreaterThanOrEqual(150);
 
     const names = new Set();
@@ -151,7 +151,7 @@ describe('roster integrity', () => {
       expect(t.club.length).toBeGreaterThan(1);
       expect(typeof t.nation).toBe('string');
       expect(t.nation.length).toBeGreaterThanOrEqual(2);
-      expect(OUTFIELD_POSITIONS.has(t.position)).toBe(true);
+      expect(CARD_POSITIONS.has(t.position)).toBe(true);
       for (const stat of ['pace', 'shooting', 'passing', 'dribbling', 'defense']) {
         expect(Number.isInteger(t[stat])).toBe(true);
         expect(t[stat]).toBeGreaterThanOrEqual(25);
@@ -161,8 +161,25 @@ describe('roster integrity', () => {
     expect(names.size).toBe(api.TEMPLATES.length);
   });
 
-  test('no goalkeepers in the roster', () => {
-    expect(api.TEMPLATES.some((t) => t.position === 'GK')).toBe(false);
+  test('goalkeeper overall uses compatible defense-led five-stat weights', () => {
+    const weights = api.OVR_WEIGHTS.GK;
+    expect(weights).toBeDefined();
+    expect(Object.keys(weights).sort()).toEqual(['defense', 'dribbling', 'pace', 'passing', 'shooting']);
+    expect(Object.values(weights).reduce((sum, weight) => sum + weight, 0)).toBeCloseTo(1);
+    expect(weights.defense).toBeGreaterThan(0.5);
+    for (const weight of Object.values(weights)) expect(weight).toBeGreaterThan(0);
+  });
+
+  test('verified goalkeeper templates cover every rarity tier', () => {
+    const keepers = api.TEMPLATES.filter((t) => t.position === 'GK');
+    expect(keepers.map((t) => [t.name, t.club, t.nation])).toEqual([
+      ['Thibaut Courtois', 'Real Madrid', 'Belgium'],
+      ['David Raya', 'Arsenal', 'Spain'],
+      ['Kepa Arrizabalaga', 'Arsenal', 'Spain'],
+      ['Tommy Setford', 'Arsenal', 'England'],
+      ['Jack Porter', 'Arsenal', 'England'],
+    ]);
+    expect([...new Set(keepers.map((t) => t.rarity))].sort()).toEqual(['common', 'epic', 'legendary', 'rare']);
   });
 
   test('overall derives from the five stats with position weights', () => {
@@ -247,6 +264,32 @@ describe('generation across flows', () => {
     }
   });
 
+  test('generation deals every goalkeeper through normal rarity decks and saves unchanged', () => {
+    const storage = makeStorage();
+    const { api: fresh } = loadApp(storage);
+    const generated = [];
+    for (const rarity of ['common', 'rare', 'epic', 'legendary']) {
+      const tier = fresh.TEMPLATES.filter((t) => t.rarity === rarity);
+      // Existing startup draws may leave a partially consumed deck. Two full
+      // cycles guarantee coverage without depending on random shuffle order.
+      for (let i = 0; i < tier.length * 2; i++) {
+        const card = fresh.generatePlayer(fresh.state.nextId++, rarity);
+        if (card.position === 'GK') generated.push(card);
+      }
+    }
+    expect(new Set(generated.map((c) => c.name)).size).toBe(5);
+    for (const card of generated) {
+      const template = fresh.TEMPLATES.find((t) => t.name === card.name);
+      for (const field of ['position', 'overall', 'rarity', 'basePrice', 'pace', 'shooting', 'passing', 'dribbling', 'defense']) {
+        expect(card[field]).toBe(template[field]);
+      }
+    }
+    fresh.state.collection = generated;
+    fresh.saveState();
+    const { api: reloaded } = loadApp(storage);
+    expect(canonical(reloaded.state.collection)).toEqual(canonical(generated));
+  });
+
   test('rarity override is honored', () => {
     for (let i = 0; i < 30; i++) {
       expect(api.generatePlayer(i, 'legendary').rarity).toBe('legendary');
@@ -289,7 +332,7 @@ describe('generation across flows', () => {
     expect(fresh.state.collection.length).toBe(10);
     expect(fresh.state.collection.filter((c) => c.rarity === 'rare').length).toBe(2);
     expect(fresh.state.collection.filter((c) => c.rarity === 'common').length).toBe(8);
-    expect(fresh.state.market.every((c) => c.position !== 'GK')).toBe(true);
+    expect(fresh.state.market.every((c) => CARD_POSITIONS.has(c.position))).toBe(true);
   });
 
   test('bronze pack honors weights and pack flow adds cards to collection', () => {
@@ -336,7 +379,7 @@ describe('save roundtrip', () => {
     const storage = makeStorage();
     const first = loadApp(storage);
     const savedBefore = JSON.parse(storage.getItem('futcard-save-v1'));
-    expect(savedBefore.version).toBe(1);
+    expect(savedBefore.version).toBe(2);
     expect(savedBefore.collection.length).toBe(10);
     expect(savedBefore.market.length).toBe(120);
     expect(savedBefore.bots.length).toBe(4);
@@ -418,7 +461,7 @@ describe('save roundtrip', () => {
     expect(legacy.position).toBe('ST');
     expect(state.market.length).toBe(120);
     expect(state.bots.length).toBe(4);
-    expect(state.market.every((c) => c.position !== 'GK')).toBe(true);
+    expect(state.market.every((c) => CARD_POSITIONS.has(c.position))).toBe(true);
   });
 
   test('corrupt card fields fall back without crashing', () => {
@@ -467,6 +510,8 @@ describe('source hygiene', () => {
   test('shippable source files carry no flag glyphs or hidden/bidirectional Unicode', () => {
     const files = [
       'src/app.js',
+      'src/teams-model.js',
+      'src/teams-ui.js',
       'src/data/reference.js',
       'src/data/roster.js',
       'src/index.html',

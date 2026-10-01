@@ -5,8 +5,9 @@
 // Club, nation and position were verified against Transfermarkt league and
 // club squad pages (saison_id 2026, fetched 2026-09-29); dual-nation players
 // use the national team recorded on their Transfermarkt profile. Per-player
-// sources: docs/roster-2026-27.md. Goalkeepers are excluded (outfield
-// snapshot); stats are authored plausible profiles bound to each player.
+// sources: docs/roster-2026-27.md. Goalkeepers were added using official club
+// profiles fetched 2026-10-02; the original outfield snapshot stays frozen.
+// Stats are authored plausible profiles bound to each player.
 // Overall, rarity, emoji and base price derive from the five stats, so a
 // stronger player always rates and prices at or above a weaker one.
 //
@@ -222,4 +223,9 @@ const PLAYER_TEMPLATES = [
   { name: 'Loïs Openda', club: 'Lyon', nation: 'Belgium', position: 'ST', pace: 77, shooting: 70, passing: 64, dribbling: 74, defense: 56, },
   { name: 'Olivier Giroud', club: 'Lille', nation: 'France', position: 'ST', pace: 59, shooting: 65, passing: 52, dribbling: 62, defense: 46, },
   { name: 'Florian Thauvin', club: 'Lens', nation: 'France', position: 'RW', pace: 74, shooting: 62, passing: 64, dribbling: 74, defense: 50, },
+  { name: 'Thibaut Courtois', club: 'Real Madrid', nation: 'Belgium', position: 'GK', pace: 60, shooting: 28, passing: 78, dribbling: 60, defense: 96, },
+  { name: 'David Raya', club: 'Arsenal', nation: 'Spain', position: 'GK', pace: 65, shooting: 28, passing: 88, dribbling: 65, defense: 90, },
+  { name: 'Kepa Arrizabalaga', club: 'Arsenal', nation: 'Spain', position: 'GK', pace: 58, shooting: 27, passing: 75, dribbling: 55, defense: 84, },
+  { name: 'Tommy Setford', club: 'Arsenal', nation: 'England', position: 'GK', pace: 55, shooting: 25, passing: 60, dribbling: 50, defense: 73, },
+  { name: 'Jack Porter', club: 'Arsenal', nation: 'England', position: 'GK', pace: 50, shooting: 25, passing: 52, dribbling: 45, defense: 64, },
 ];

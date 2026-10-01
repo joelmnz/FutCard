@@ -8,13 +8,15 @@ Produce the GitHub Pages artifact from `src/` and `public/`, keep placeholder ic
 
 ## Ownership
 
-- `build-static.ts` — build pipeline: cleans `dist/`, copies `src/` and `public/` (skipping `.md` files), fingerprints `app.js` → `app.<8-char-hash>.js`, `data/roster.js` → `data/roster.<8-char-hash>.js`, `data/reference.js` → `data/reference.<8-char-hash>.js`, and `site.css` → `site.<8-char-hash>.css` (sha256 prefix), rewrites references in `dist/index.html`, resolves `dist/sw.js` placeholders, writes `.nojekyll`.
+- `build-static.ts` — build pipeline: cleans `dist/`, copies `src/` and `public/` (skipping `.md` files), fingerprints `app.js` → `app.<8-char-hash>.js`, `data/roster.js` → `data/roster.<8-char-hash>.js`, `data/reference.js` → `data/reference.<8-char-hash>.js`, `teams-model.js` / `teams-ui.js` → their respective fingerprinted names, and `site.css` → `site.<8-char-hash>.css` (sha256 prefix), rewrites references in `dist/index.html`, resolves `dist/sw.js` placeholders, writes `.nojekyll`.
 - `build-static.test.ts` — Bun test that runs the build and asserts the artifact shape.
 - `generate-icons.ts` — regenerates placeholder SVG icons into `public/` (`favicon.svg`, `icons/icon-192.svg`, `icons/icon-512.svg`, `icons/maskable-icon.svg`).
 
 ## Local Contracts
 
 - The `precacheUrls` list in `build-static.ts` defines the assets the service worker precaches. Adding or removing a root-level asset requires updating that list in the same change.
+- Every new runtime script must be fingerprinted, referenced in `index.html`, added to `precacheUrls`, and included in the service-worker build version so offline caches update when it changes.
+- Build tests must assert each runtime script's fingerprinted reference in both generated HTML and the resolved service worker.
 - `src/sw.js` placeholders (`__FUTCARD_SW_VERSION__`, `__FUTCARD_PRECACHE_URLS__`) must stay intact in source; only the build resolves them into `dist/`.
 - `.md` files are never copied to `dist/`.
 - The fingerprint naming scheme (`app.` + 8-character hash + extension, same for `site.`) is asserted by tests; keep it stable.

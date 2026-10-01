@@ -226,6 +226,8 @@ function createInitialState() {
   return {
     coins: 1000000,
     collection: [],
+    teams: [],
+    nextTeamId: 1,
     market: [],
     nextId: 1,
     bots: [],
@@ -312,7 +314,9 @@ function normalizeBot(bot, index) {
 
 function buildSaveData() {
   return {
-    version: 1,
+    version: 2,
+    teams: state.teams,
+    nextTeamId: state.nextTeamId,
     coins: state.coins,
     collection: state.collection,
     market: state.market,
@@ -390,6 +394,17 @@ function loadState() {
     nextState.nextId = Math.max(nextState.nextId, maxCardId + 1);
     nextState.selectedBot = Math.min(nextState.selectedBot, Math.max(0, nextState.bots.length - 1));
 
+    nextState.teams = Array.isArray(parsed.teams) && typeof TeamsModel !== 'undefined'
+      ? parsed.teams.map((team) => TeamsModel.normalize(team, nextState.collection)).filter(Boolean)
+      : [];
+    const seenTeamIds = new Set();
+    nextState.teams = nextState.teams.filter((team) => {
+      if (seenTeamIds.has(team.id)) return false;
+      seenTeamIds.add(team.id);
+      return true;
+    });
+    nextState.nextTeamId = Math.max(Number.isInteger(parsed.nextTeamId) ? parsed.nextTeamId : 1,
+      ...nextState.teams.map((team) => team.id + 1), 1);
     state = nextState;
 
     if (!Array.isArray(parsed.market)) {
@@ -549,12 +564,15 @@ function buildMiniCard(card, removeCallback) {
 // PAGES
 // ============================================================
 function showPage(name) {
+  if (name !== 'teams' && document.getElementById('page-teams')?.classList.contains('active')
+      && typeof TeamsUI !== 'undefined' && !TeamsUI.canLeave()) return;
   document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach((t) => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  const tabs = document.querySelectorAll('.nav-tab');
-  const pageMap = { dashboard: 0, collection: 1, packs: 2, market: 3, trade: 4 };
-  tabs[pageMap[name]].classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((tab) => {
+    if (tab.dataset.page === name) tab.classList.add('active');
+  });
+  if (name === 'teams') TeamsUI.render();
 
   if (name === 'dashboard') renderDashboard();
   if (name === 'collection') renderCollection();
@@ -787,6 +805,7 @@ function closePack() {
   pendingPackCards = [];
   saveState();
   document.getElementById('pack-overlay').classList.remove('show');
+  document.getElementById('pack-reveal-area').scrollTop = 0;
   showToast('✅ Cards added to your collection!', 'success');
   updateCoinsDisplay();
 }
@@ -872,6 +891,23 @@ function closeSellModal() {
   state.sellCardId = null;
 }
 
+// Keep ownership changes and team references in sync across sell/trade flows.
+function removeCollectionCards(ids) {
+  const removed = new Set(ids);
+  state.collection = state.collection.filter((card) => !removed.has(card.id));
+  state.teams.forEach((team) => {
+    Object.keys(team.slots).forEach((slot) => {
+      if (removed.has(team.slots[slot])) team.slots[slot] = null;
+    });
+  });
+  if (typeof TeamsUI !== 'undefined') TeamsUI.reconcileDraft();
+}
+
+function confirmTeamCardRemoval(ids) {
+  const used = state.teams.some((team) => Object.values(team.slots).some((id) => ids.includes(id)));
+  return !used || window.confirm('These cards are used in saved teams. Continuing will clear their team positions.');
+}
+
 function confirmSell() {
   const price = parseInt(document.getElementById('sell-price-input').value);
   if (!price || price < 1) {
@@ -881,7 +917,8 @@ function confirmSell() {
   const card = state.collection.find((c) => c.id === state.sellCardId);
   if (!card) return;
 
-  state.collection = state.collection.filter((c) => c.id !== state.sellCardId);
+  if (!confirmTeamCardRemoval([card.id])) return;
+  removeCollectionCards([card.id]);
   card.listed = true;
   card.listPrice = price;
   state.market.push(card);
@@ -1073,6 +1110,8 @@ function proposeTrade() {
     return;
   }
 
+  if (!confirmTeamCardRemoval(state.yourTradeCards.map((card) => card.id))) return;
+
   const ratio = botVal > 0 ? yourVal / botVal : 1;
   const acceptThreshold = { fair: 0.85, greedy: 1.05, generous: 0.7, elite: 0.9 }[bot.style];
   const accepted = ratio >= acceptThreshold;
@@ -1080,7 +1119,7 @@ function proposeTrade() {
   setTimeout(() => {
     if (accepted) {
       state.yourTradeCards.forEach((c) => {
-        state.collection = state.collection.filter((x) => x.id !== c.id);
+        removeCollectionCards([c.id]);
         bot.cards.push(c);
       });
       state.botTradeCards.forEach((c) => {
@@ -1274,6 +1313,14 @@ function init() {
     saveState();
   }
 
+  if (typeof TeamsUI !== 'undefined') TeamsUI.init({
+    getCollection: () => state.collection,
+    getTeams: () => state.teams,
+    nextId: () => state.nextTeamId++,
+    save: saveState,
+    buildCardHTML,
+    toast: showToast
+  });
   updateCoinsDisplay();
   renderDashboard();
   renderPriceTicker();
@@ -1315,6 +1362,7 @@ if (typeof globalThis.__FUTCARD_TEST_HOOK__ === 'function') {
     openPack,
     closePack,
     buyCard,
+    removeCollectionCards,
     loadState,
     saveState,
     buildSaveData,

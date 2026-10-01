@@ -61,6 +61,8 @@ export async function buildStaticSite() {
   const hashedAppFile = await fingerprintFile('app.js', 'app');
   const hashedRosterFile = await fingerprintFile('data/roster.js', 'roster');
   const hashedReferenceFile = await fingerprintFile('data/reference.js', 'reference');
+  const hashedTeamsModel = await fingerprintFile('teams-model.js', 'teams-model');
+  const hashedTeamsUI = await fingerprintFile('teams-ui.js', 'teams-ui');
   const hashedStyleFile = await fingerprintFile('site.css', 'site');
 
   const precacheUrls = [
@@ -71,6 +73,8 @@ export async function buildStaticSite() {
     './icons/icon-512.svg',
     './icons/maskable-icon.svg',
     `./${hashedAppFile}`,
+    `./${hashedTeamsModel}`,
+    `./${hashedTeamsUI}`,
     `./data/${hashedRosterFile}`,
     `./data/${hashedReferenceFile}`,
     `./${hashedStyleFile}`,
@@ -84,12 +88,14 @@ export async function buildStaticSite() {
       .replace('./site.css', `./${hashedStyleFile}`)
       .replace('./data/reference.js', `./data/${hashedReferenceFile}`)
       .replace('./data/roster.js', `./data/${hashedRosterFile}`)
+      .replace('./teams-model.js', `./${hashedTeamsModel}`)
+      .replace('./teams-ui.js', `./${hashedTeamsUI}`)
       .replace('./app.js', `./${hashedAppFile}`),
   );
 
   const swPath = join(distDir, 'sw.js');
   const swTemplate = await readFile(swPath, 'utf8');
-  const buildVersion = [hashedAppFile, hashedRosterFile, hashedReferenceFile, hashedStyleFile].join(':');
+  const buildVersion = [hashedAppFile, hashedRosterFile, hashedReferenceFile, hashedTeamsModel, hashedTeamsUI, hashedStyleFile].join(':');
   await writeFile(
     swPath,
     swTemplate

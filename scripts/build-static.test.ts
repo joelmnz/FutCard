@@ -40,6 +40,11 @@ describe('buildStaticSite', () => {
     const resolvedIndex = await readFile(join(distDir, 'index.html'), 'utf8');
     await expect(resolvedIndex).toMatch(/data\/roster\.[a-f0-9]{8}\.js/);
     await expect(resolvedIndex).toMatch(/data\/reference\.[a-f0-9]{8}\.js/);
+    for (const module of ['teams-model', 'teams-ui']) {
+      const pattern = new RegExp(`${module}\\.[a-f0-9]{8}\\.js`);
+      expect(resolvedIndex).toMatch(pattern);
+      expect(resolvedSw).toMatch(pattern);
+    }
     await expect(fileExists(join(distDir, 'favicon.svg'))).resolves.toBe(true);
     await expect(fileExists(join(distDir, '.nojekyll'))).resolves.toBe(true);
   });

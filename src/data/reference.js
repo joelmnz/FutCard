@@ -32,7 +32,10 @@ const LAST_NAMES = [
 ];
 
 // Position-weighted overall (FUT-style); weights per position sum to 1.
+// GK keeps the legacy five-stat card schema: defense models keeping ability,
+// passing distribution, pace mobility, dribbling ball control, shooting finishing.
 const OVR_WEIGHTS = {
+  GK: { defense: 0.70, passing: 0.15, pace: 0.07, dribbling: 0.06, shooting: 0.02 },
   ST: { shooting: 0.50, pace: 0.22, dribbling: 0.16, passing: 0.08, defense: 0.04 },
   CF: { shooting: 0.38, pace: 0.20, dribbling: 0.24, passing: 0.14, defense: 0.04 },
   LW: { pace: 0.26, dribbling: 0.30, shooting: 0.20, passing: 0.18, defense: 0.06 },
