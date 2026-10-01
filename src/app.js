@@ -97,37 +97,96 @@ function showLegendaryCelebration(name) {
   setTimeout(() => el.remove(), 2400);
 }
 
-// ============================================================
-// DATA — PLAYERS
-// ============================================================
-const PLAYER_EMOJIS = ['🧑','👨','👦','🧔','👱','🧑‍🦱','🧑‍🦰','🧑‍🦳'];
-const POSITIONS = ['GK','CB','CB','LB','RB','CDM','CM','CM','CAM','LW','RW','ST','ST','CF'];
-const CLUBS = [
-  'Manchester City','Arsenal','Liverpool','Chelsea','Manchester United',
-  'Tottenham','Newcastle','Aston Villa','Brighton','West Ham',
-  'Real Madrid','Barcelona','Bayern Munich','PSG','Juventus',
-  'Atletico Madrid','Dortmund','Inter Milan','AC Milan','Ajax'
-];
-const NATIONS = ['🏴','🇧🇷','🇦🇷','🇫🇷','🇩🇪','🇵🇹','🇳🇱','🇧🇪','🇪🇸','🇮🇹','🇸🇳','🇳🇬','🇺🇾','🇨🇴','🇲🇦'];
+// Player roster and reference data live in src/data/roster.js and
+// src/data/reference.js (classic scripts, loaded before app.js).
 
-const FIRST_NAMES = [
-  'Liam','Noah','Oliver','James','Elijah','Lucas','Mason','Ethan','Aiden','Logan',
-  'Carlos','Diego','Marco','Rafael','Bruno','Sergio','Antoine','Kylian','Erling','Vinicius',
-  'Mohamed','Sadio','Riyad','Kevin','Joshua','Trent','Declan','Jude','Phil','Bukayo',
-  'Harry','Marcus','Raheem','Jack','Jordan','Kieran','Luke','Ben','Aaron','Kalvin',
-  'Lautaro','Romelu','Tammy','Olivier','Karim','Robert','Thomas','Leon','Leroy','Jamal'
-];
-const LAST_NAMES = [
-  'Smith','Johnson','Williams','Brown','Jones','Garcia','Martinez','Davis','Wilson','Taylor',
-  'Salah','Mane','Mahrez','De Bruyne','Walker','Alexander-Arnold','Rice','Bellingham','Foden','Saka',
-  'Kane','Rashford','Sterling','Grealish','Henderson','Trippier','Shaw','White','Ramsdale','Phillips',
-  'Martinez','Lukaku','Abraham','Giroud','Benzema','Lewandowski','Muller','Goretzka','Gnabry','Musiala',
-  'Silva','Neymar','Mbappe','Griezmann','Pogba','Kante','Varane','Hernandez','Pavard','Dembele'
-];
+// ============================================================
+// NATION FLAGS (render-time derivation)
+// ============================================================
+// Flag glyphs are never stored in source or save data; they are built from
+// ASCII codes at render time. Unknown or legacy stored nations render as-is.
+function nationFlag(nation) {
+  const code = NATION_FLAG_CODES[nation];
+  if (!code) return '';
+  const chars = [...code];
+  if (code.length === 2) {
+    return String.fromCodePoint(...chars.map((c) => 0x1F1E6 + c.charCodeAt(0) - 65));
+  }
+  return String.fromCodePoint(0x1F3F4, ...chars.map((c) => 0xE0000 + c.charCodeAt(0)), 0xE007F);
+}
 
+function nationDisplay(nation) {
+  if (typeof nation !== 'string' || nation === '') return nation;
+  const flag = nationFlag(nation);
+  return flag ? `${flag} ${nation}` : nation;
+}
+
+// Legacy random identity fallback (normalization of corrupt v1 saves only).
 function randName() {
   return FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)] + ' ' +
          LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
+}
+
+function deriveOverall(stats, position) {
+  const weights = OVR_WEIGHTS[position];
+  let sum = 0;
+  for (const [stat, weight] of Object.entries(weights)) sum += weight * stats[stat];
+  return Math.round(sum);
+}
+
+function rarityForOverall(overall) {
+  if (overall >= 85) return 'legendary';
+  if (overall >= 75) return 'epic';
+  if (overall >= 65) return 'rare';
+  return 'common';
+}
+
+// Piecewise-linear monotonic price through the legacy rarity price bands:
+// common 50-64 -> 1,000-15,000 | rare 65-74 -> 15,000-80,000 | epic 75-84 -> 80,000-500,000 | legendary 85-99 -> 500,000-2,000,000.
+function basePriceFor(overall) {
+  const band = (lo, hi, priceLo, priceHi) =>
+    Math.round(priceLo + (priceHi - priceLo) * (overall - lo) / (hi - lo));
+  if (overall >= 85) return band(85, 99, 500000, 2000000);
+  if (overall >= 75) return band(75, 84, 80000, 500000);
+  if (overall >= 65) return band(65, 74, 15000, 80000);
+  return band(50, 64, 1000, 15000);
+}
+
+function templateEmoji(name) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash + name.charCodeAt(i) * 31) | 0;
+  return PLAYER_EMOJIS[Math.abs(hash) % PLAYER_EMOJIS.length];
+}
+
+const TEMPLATES = PLAYER_TEMPLATES.map((t) => {
+  const overall = deriveOverall(t, t.position);
+  return {
+    ...t,
+    overall,
+    rarity: rarityForOverall(overall),
+    basePrice: basePriceFor(overall),
+    emoji: templateEmoji(t.name)
+  };
+});
+
+// Shuffled deal decks per rarity tier: consecutive draws cover the whole tier
+// before repeating, so generated batches stay varied.
+const templateDecks = {};
+function shuffleTemplates(list) {
+  for (let i = list.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [list[i], list[j]] = [list[j], list[i]];
+  }
+  return list;
+}
+function pickTemplate(rarity) {
+  let deck = templateDecks[rarity];
+  if (!deck || deck.index >= deck.list.length) {
+    deck = templateDecks[rarity] = { list: shuffleTemplates(TEMPLATES.filter((t) => t.rarity === rarity)), index: 0 };
+  }
+  const template = deck.list[deck.index++];
+  if (template) return template;
+  return TEMPLATES[Math.floor(Math.random() * TEMPLATES.length)];
 }
 
 function generatePlayer(id, rarityOverride) {
@@ -140,41 +199,21 @@ function generatePlayer(id, rarityOverride) {
     else rarity = 'common';
   }
 
-  const baseStats = {
-    legendary: { min: 85, max: 99 },
-    epic: { min: 75, max: 88 },
-    rare: { min: 65, max: 78 },
-    common: { min: 50, max: 68 }
-  }[rarity];
-
-  const r = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
-  const pace = r(baseStats.min, baseStats.max);
-  const shooting = r(baseStats.min, baseStats.max);
-  const passing = r(baseStats.min, baseStats.max);
-  const dribbling = r(baseStats.min, baseStats.max);
-  const defense = r(baseStats.min, baseStats.max);
-  const overall = Math.round((pace + shooting + passing + dribbling + defense) / 5);
-
-  const basePrice = {
-    legendary: r(500000, 2000000),
-    epic: r(80000, 500000),
-    rare: r(15000, 80000),
-    common: r(1000, 15000)
-  }[rarity];
+  const t = pickTemplate(rarity);
 
   return {
     id,
-    name: randName(),
-    club: CLUBS[Math.floor(Math.random() * CLUBS.length)],
-    nation: NATIONS[Math.floor(Math.random() * NATIONS.length)],
-    position: POSITIONS[Math.floor(Math.random() * POSITIONS.length)],
-    emoji: PLAYER_EMOJIS[Math.floor(Math.random() * PLAYER_EMOJIS.length)],
-    rarity,
-    overall,
-    pace, shooting, passing, dribbling, defense,
-    basePrice,
-    currentPrice: basePrice,
-    priceHistory: [basePrice],
+    name: t.name,
+    club: t.club,
+    nation: t.nation,
+    position: t.position,
+    emoji: t.emoji,
+    rarity: t.rarity,
+    overall: t.overall,
+    pace: t.pace, shooting: t.shooting, passing: t.passing, dribbling: t.dribbling, defense: t.defense,
+    basePrice: t.basePrice,
+    currentPrice: t.basePrice,
+    priceHistory: [t.basePrice],
     listed: false,
     listPrice: 0
   };
@@ -187,6 +226,8 @@ function createInitialState() {
   return {
     coins: 1000000,
     collection: [],
+    teams: [],
+    nextTeamId: 1,
     market: [],
     nextId: 1,
     bots: [],
@@ -242,7 +283,7 @@ function normalizeCard(card) {
     name: typeof card.name === 'string' ? card.name : randName(),
     club: typeof card.club === 'string' ? card.club : CLUBS[0],
     nation: typeof card.nation === 'string' ? card.nation : NATIONS[0],
-    position: typeof card.position === 'string' ? card.position : POSITIONS[0],
+    position: typeof card.position === 'string' ? card.position : 'CM',
     emoji: typeof card.emoji === 'string' ? card.emoji : PLAYER_EMOJIS[0],
     rarity: ['legendary', 'epic', 'rare', 'common'].includes(card.rarity) ? card.rarity : 'common',
     overall: Number.isFinite(card.overall) ? Math.round(card.overall) : 50,
@@ -273,7 +314,9 @@ function normalizeBot(bot, index) {
 
 function buildSaveData() {
   return {
-    version: 1,
+    version: 2,
+    teams: state.teams,
+    nextTeamId: state.nextTeamId,
     coins: state.coins,
     collection: state.collection,
     market: state.market,
@@ -299,7 +342,7 @@ function saveState() {
   } catch (error) {
     console.error('Failed to save FutCard state.', error);
     if (!storageErrorShown && document.getElementById('toast-container')) {
-      showToast('⚠️ Could not save progress in this browser session.', 'warning');
+      showToast('⚠ Could not save progress in this browser session.', 'warning');
       storageErrorShown = true;
     }
     return false;
@@ -351,6 +394,17 @@ function loadState() {
     nextState.nextId = Math.max(nextState.nextId, maxCardId + 1);
     nextState.selectedBot = Math.min(nextState.selectedBot, Math.max(0, nextState.bots.length - 1));
 
+    nextState.teams = Array.isArray(parsed.teams) && typeof TeamsModel !== 'undefined'
+      ? parsed.teams.map((team) => TeamsModel.normalize(team, nextState.collection)).filter(Boolean)
+      : [];
+    const seenTeamIds = new Set();
+    nextState.teams = nextState.teams.filter((team) => {
+      if (seenTeamIds.has(team.id)) return false;
+      seenTeamIds.add(team.id);
+      return true;
+    });
+    nextState.nextTeamId = Math.max(Number.isInteger(parsed.nextTeamId) ? parsed.nextTeamId : 1,
+      ...nextState.teams.map((team) => team.id + 1), 1);
     state = nextState;
 
     if (!Array.isArray(parsed.market)) {
@@ -479,7 +533,7 @@ function buildCardHTML(card, options = {}) {
       <div class="card-position">${card.position}</div>
       <div class="card-avatar" style="background:rgba(255,255,255,0.05);">${card.emoji}</div>
       <div class="card-name">${card.name}</div>
-      <div class="card-club">${card.nation} ${card.club}</div>
+      <div class="card-club">${nationDisplay(card.nation)} ${card.club}</div>
       <div class="card-stats">
         <div class="stat-item"><span class="stat-label">PAC</span><span class="stat-val">${card.pace}</span></div>
         <div class="stat-item"><span class="stat-label">SHO</span><span class="stat-val">${card.shooting}</span></div>
@@ -510,12 +564,15 @@ function buildMiniCard(card, removeCallback) {
 // PAGES
 // ============================================================
 function showPage(name) {
+  if (name !== 'teams' && document.getElementById('page-teams')?.classList.contains('active')
+      && typeof TeamsUI !== 'undefined' && !TeamsUI.canLeave()) return;
   document.querySelectorAll('.page').forEach((p) => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach((t) => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
-  const tabs = document.querySelectorAll('.nav-tab');
-  const pageMap = { dashboard: 0, collection: 1, packs: 2, market: 3, trade: 4 };
-  tabs[pageMap[name]].classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach((tab) => {
+    if (tab.dataset.page === name) tab.classList.add('active');
+  });
+  if (name === 'teams') TeamsUI.render();
 
   if (name === 'dashboard') renderDashboard();
   if (name === 'collection') renderCollection();
@@ -748,6 +805,7 @@ function closePack() {
   pendingPackCards = [];
   saveState();
   document.getElementById('pack-overlay').classList.remove('show');
+  document.getElementById('pack-reveal-area').scrollTop = 0;
   showToast('✅ Cards added to your collection!', 'success');
   updateCoinsDisplay();
 }
@@ -833,6 +891,23 @@ function closeSellModal() {
   state.sellCardId = null;
 }
 
+// Keep ownership changes and team references in sync across sell/trade flows.
+function removeCollectionCards(ids) {
+  const removed = new Set(ids);
+  state.collection = state.collection.filter((card) => !removed.has(card.id));
+  state.teams.forEach((team) => {
+    Object.keys(team.slots).forEach((slot) => {
+      if (removed.has(team.slots[slot])) team.slots[slot] = null;
+    });
+  });
+  if (typeof TeamsUI !== 'undefined') TeamsUI.reconcileDraft();
+}
+
+function confirmTeamCardRemoval(ids) {
+  const used = state.teams.some((team) => Object.values(team.slots).some((id) => ids.includes(id)));
+  return !used || window.confirm('These cards are used in saved teams. Continuing will clear their team positions.');
+}
+
 function confirmSell() {
   const price = parseInt(document.getElementById('sell-price-input').value);
   if (!price || price < 1) {
@@ -842,7 +917,8 @@ function confirmSell() {
   const card = state.collection.find((c) => c.id === state.sellCardId);
   if (!card) return;
 
-  state.collection = state.collection.filter((c) => c.id !== state.sellCardId);
+  if (!confirmTeamCardRemoval([card.id])) return;
+  removeCollectionCards([card.id]);
   card.listed = true;
   card.listPrice = price;
   state.market.push(card);
@@ -1006,7 +1082,7 @@ function updateTradeValues() {
       fairnessText.textContent = '✅ Fair Trade — Bot likely to accept!';
       fairnessText.style.color = '#2ecc71';
     } else if (ratio < 0.85) {
-      fairnessText.textContent = `⚠️ Your offer is low (${Math.round(ratio * 100)}% of bot's value) — Bot may reject`;
+      fairnessText.textContent = `⚠ Your offer is low (${Math.round(ratio * 100)}% of bot's value) — Bot may reject`;
       fairnessText.style.color = '#e74c3c';
     } else {
       fairnessText.textContent = `🎉 Great deal for you! (${Math.round(ratio * 100)}%) — Bot will likely accept`;
@@ -1034,6 +1110,8 @@ function proposeTrade() {
     return;
   }
 
+  if (!confirmTeamCardRemoval(state.yourTradeCards.map((card) => card.id))) return;
+
   const ratio = botVal > 0 ? yourVal / botVal : 1;
   const acceptThreshold = { fair: 0.85, greedy: 1.05, generous: 0.7, elite: 0.9 }[bot.style];
   const accepted = ratio >= acceptThreshold;
@@ -1041,7 +1119,7 @@ function proposeTrade() {
   setTimeout(() => {
     if (accepted) {
       state.yourTradeCards.forEach((c) => {
-        state.collection = state.collection.filter((x) => x.id !== c.id);
+        removeCollectionCards([c.id]);
         bot.cards.push(c);
       });
       state.botTradeCards.forEach((c) => {
@@ -1091,10 +1169,10 @@ function showCardDetail(id) {
       <div style="flex:1;min-width:200px;">
         <div style="font-size:1.3rem;font-weight:900;margin-bottom:4px;">${card.name}</div>
         <div style="color:${rarityColor(card.rarity)};font-weight:700;text-transform:uppercase;margin-bottom:8px;">${card.rarity}</div>
-        <div style="color:var(--muted);font-size:0.85rem;margin-bottom:16px;">${card.nation} ${card.club} · ${card.position}</div>
+        <div style="color:var(--muted);font-size:0.85rem;margin-bottom:16px;">${nationDisplay(card.nation)} ${card.club} · ${card.position}</div>
 
         <div style="display:grid;gap:8px;margin-bottom:20px;">
-          ${[['⚡ Pace', card.pace],['🎯 Shooting', card.shooting],['🎪 Passing', card.passing],['🌀 Dribbling', card.dribbling],['🛡️ Defense', card.defense]].map(([label, val]) => `
+          ${[['⚡ Pace', card.pace],['🎯 Shooting', card.shooting],['🎪 Passing', card.passing],['🌀 Dribbling', card.dribbling],['🛡 Defense', card.defense]].map(([label, val]) => `
             <div style="display:flex;align-items:center;gap:10px;">
               <span style="font-size:0.8rem;width:100px;">${label}</span>
               <div style="flex:1;background:rgba(255,255,255,0.05);border-radius:4px;height:8px;">
@@ -1235,6 +1313,14 @@ function init() {
     saveState();
   }
 
+  if (typeof TeamsUI !== 'undefined') TeamsUI.init({
+    getCollection: () => state.collection,
+    getTeams: () => state.teams,
+    nextId: () => state.nextTeamId++,
+    save: saveState,
+    buildCardHTML,
+    toast: showToast
+  });
   updateCoinsDisplay();
   renderDashboard();
   renderPriceTicker();
@@ -1262,6 +1348,40 @@ function init() {
   } else {
     showToast('🎉 Welcome to FutCard! You start with 🪙1,000,000 coins!', 'success');
   }
+}
+
+// Test seam: game.test.js loads this file with stubbed browser globals and
+// captures internals through this hook. Inert in the browser (hook unset).
+if (typeof globalThis.__FUTCARD_TEST_HOOK__ === 'function') {
+  globalThis.__FUTCARD_TEST_HOOK__({
+    get state() { return state; },
+    generatePlayer,
+    generateMarket,
+    generateBots,
+    giveStarterCards,
+    openPack,
+    closePack,
+    buyCard,
+    removeCollectionCards,
+    loadState,
+    saveState,
+    buildSaveData,
+    normalizeCard,
+    weightedRarity,
+    PACK_CONFIG,
+    PLAYER_TEMPLATES,
+    TEMPLATES,
+    OVR_WEIGHTS,
+    deriveOverall,
+    rarityForOverall,
+    basePriceFor,
+    templateEmoji,
+    pickTemplate,
+    randName,
+    PLAYER_EMOJIS,
+    ROSTER_SEASON,
+    ROSTER_AS_OF
+  });
 }
 
 init();

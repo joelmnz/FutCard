@@ -17,11 +17,12 @@
 <nav>
   <div class="logo">⚽ FutCard</div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="showPage('dashboard')" aria-label="Home dashboard">🏠 Home</button>
-    <button class="nav-tab" onclick="showPage('collection')" aria-label="My collection">🃏 Collection</button>
-    <button class="nav-tab" onclick="showPage('packs')" aria-label="Pack store">📦 Packs</button>
-    <button class="nav-tab" onclick="showPage('market')" aria-label="Transfer market">🏪 Market</button>
-    <button class="nav-tab" onclick="showPage('trade')" aria-label="Trade center">🔄 Trade</button>
+    <button class="nav-tab active" data-page="dashboard" onclick="showPage('dashboard')" aria-label="Home dashboard">🏠 Home</button>
+    <button class="nav-tab" data-page="collection" onclick="showPage('collection')" aria-label="My collection">🃏 Collection</button>
+    <button class="nav-tab" data-page="packs" onclick="showPage('packs')" aria-label="Pack store">📦 Packs</button>
+    <button class="nav-tab" data-page="market" onclick="showPage('market')" aria-label="Transfer market">🏪 Market</button>
+    <button class="nav-tab" data-page="trade" onclick="showPage('trade')" aria-label="Trade center">🔄 Trade</button>
+    <button class="nav-tab" data-page="teams" onclick="showPage('teams')" aria-label="Teams">👥 Teams</button>
   </div>
   <div style="display:flex;align-items:center;gap:12px;">
     <div class="coins-display">🪙 <span id="coins-display">1,000,000</span></div>
@@ -47,7 +48,7 @@
     <div class="modal-title" id="new-game-title">🔄 Start New Game?</div>
     <p style="color:var(--muted);margin-bottom:24px;line-height:1.6;font-size:1rem;">This will <strong style="color:#e74c3c;">erase all your progress</strong> — your cards, coins, and collection will be gone forever!</p>
     <div style="display:flex;gap:12px;">
-      <button class="btn btn-danger" onclick="confirmNewGame()">🗑️ Yes, Start Over</button>
+      <button class="btn btn-danger" onclick="confirmNewGame()">🗑 Yes, Start Over</button>
       <button class="btn btn-outline" onclick="closeNewGameModal()">Cancel</button>
     </div>
   </div>
@@ -278,6 +279,9 @@
   </div>
 </div>
 
+<!-- TEAMS PAGE -->
+<div class="page" id="page-teams"><div id="teams-root"></div></div>
+
 <!-- TRADE SELECTOR MODAL -->
 <div class="modal-overlay" id="trade-selector-modal">
   <div class="modal" style="max-width:700px;max-height:80vh;overflow-y:auto;">
@@ -287,6 +291,10 @@
   </div>
 </div>
 
+<script src="./data/reference.js"></script>
+<script src="./data/roster.js"></script>
+<script src="./teams-model.js"></script>
+<script src="./teams-ui.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>
